@@ -1,5 +1,5 @@
 "use strict";
-/*global sData,data2img,drawImgBlend,Bone */
+/*global WAIT,sData,data2img,drawImgBlend,Bone */
 
 //canvas setup
 var canvas0 = document.getElementById('canvas0');
@@ -304,6 +304,10 @@ ctx0.fillRect(0,0,800,600);
 var pi2 = Math.PI*2;
 var tick=0;
 function frame(){
+    if(WAIT>0){
+        window.requestAnimationFrame(frame);
+        return;
+    }
     for(let id=0;id<players.length;id++){
         let p=players[id];
         if(!p.done){
@@ -329,7 +333,7 @@ function frame(){
             ctx1.stroke();
         }
     }
-    bone.setRGBA(tick%255,tick%255,255,1);
+    bone.setRGBA(tick%255,tick%255,255,1,true);
     for(let i=0;i<50;i++){
         bone.draw(ctx1,100+i*10,100+(i+tick)%100,200-((i+tick)%100)*2);
     }

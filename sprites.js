@@ -1,6 +1,8 @@
 "use strict";
 /*global Image,ImageData*/
 
+var WAIT = 0;
+
 let fakeCanvas = document.createElement('canvas');
 let ctxF = fakeCanvas.getContext('2d');
 
@@ -81,7 +83,7 @@ var sData = {
         ],
     },
 };
-function data2img(data,r=255,g=255,b=255,a=1,x=0,y=0,w=16,h=16){
+function data2img(data,r=255,g=255,b=255,a=1,x=0,y=0,w=16,h=16,wait=false){
     let round = Math.round;
     r = round(r);
     g = round(g);
@@ -101,6 +103,10 @@ function data2img(data,r=255,g=255,b=255,a=1,x=0,y=0,w=16,h=16){
     ctxF.clearRect(0,0,w,h);
     ctxF.putImageData(new ImageData(new Uint8ClampedArray(newData),w,h),0,0);
     let img = new Image();
+    if(wait){
+        WAIT++;
+        img.onload = ()=>{WAIT--};
+    }
     img.src = fakeCanvas.toDataURL();
     return img;
 }
@@ -121,7 +127,7 @@ function drawImgBlend(ctx,img,x,y){
     ctx.globalCompositeOperation = oldComp;
 }
 
-function imgRGBA(img,r=255,g=255,b=255,a=1){ //BEWARE: MODIFIES IMAGE AOURCE, DOES NOT CREATE NEW IMAGE
+function imgRGBA(img,r=255,g=255,b=255,a=1,wait=false){ //BEWARE: MODIFIES IMAGE AOURCE, DOES NOT CREATE NEW IMAGE
     let w=img.width,h=img.height;
     fakeCanvas.width = w;
     fakeCanvas.height= h;
@@ -131,6 +137,10 @@ function imgRGBA(img,r=255,g=255,b=255,a=1){ //BEWARE: MODIFIES IMAGE AOURCE, DO
     ctxF.drawImage(img,0,0);
     ctxF.fillRect(0,0,w,h); //Makes a negatove
     ctxF.fillRect(0,0,w,h); //Fills the negative
+    if(wait){
+        WAIT++;
+        img.onload = ()=>{WAIT--};
+    }
     img.src = fakeCanvas.toDataURL();
 }
 
@@ -158,11 +168,11 @@ class Bone{
         }
         ctx.fillStyle = oldFill;
     }
-    setRGBA(r=255,g=255,b=255,a=1){
+    setRGBA(r=255,g=255,b=255,a=1,wait=false){
         this.fill=`rgba(${r},${g},${b},${a})`;
-        imgRGBA(this.top   ,r,g,b,a);
-        imgRGBA(this.bottom,r,g,b,a);
-        imgRGBA(this.left  ,r,g,b,a);
-        imgRGBA(this.right ,r,g,b,a);
+        imgRGBA(this.top   ,r,g,b,a,wait);
+        imgRGBA(this.bottom,r,g,b,a,wait);
+        imgRGBA(this.left  ,r,g,b,a,wait);
+        imgRGBA(this.right ,r,g,b,a,wait);
     }
 }

@@ -10,6 +10,12 @@
         <title>UTR</title>
     </head>
     <body>
+        <script type="text/javascript">
+            window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+                alert(`Error occured at line ${lineNumber} in ${url}: ${errorMsg}`);
+                return false;
+            }
+        </script>
         <div>
             <canvas id="canvas0" width="800" height="600" style="position:absolute; top:0px; left:0px; z-index:0;" oncontextmenu="return false;"></canvas>
             <canvas id="canvas1" width="800" height="600" style="position:absolute; top:0px; left:0px; z-index:1;" oncontextmenu="return false;"></canvas>

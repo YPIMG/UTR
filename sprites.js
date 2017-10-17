@@ -1,5 +1,5 @@
 "use strict";
-/*global Image,ImageData*/
+/*global Image*/
 var WAIT = 0;
 {
 
@@ -20,24 +20,19 @@ var newImage = function(w,h,wait=false,src=""){
 var sprites = {
      heart   :newImage(16,16,true,"sprites/heart.png")
     ,defHeart:newImage(16,16,true,"sprites/default heart.png")
-    ,defBone:{
-         top   :newImage(10,6,true,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAN0lEQVQYV3WOMQoAAAgC9f+PNhoEKWyp7BIJAJK0nSS3u1KnFx8NP/0K6Zjzc6xgZqxQy3Mflhssvh/7kkXJwAAAAABJRU5ErkJggg==")
-        ,bottom:newImage(10,6,true,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAALklEQVQYV2NkYGBg+P///38QjQswggDRCgmZBrOFkWyFuJyD4kaYIph1MNtA4gAOXx/7ZPpRPQAAAABJRU5ErkJggg==")
-        ,left  :newImage(6,10,true,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAKCAYAAACXDi8zAAAANklEQVQYV2NkYGBg+P///38QDQKMjIyMYBpZECaJXwLdKLiRMAa6kWCLsOkCS2BzABVcBfMgAI6lJ+tWtP4IAAAAAElFTkSuQmCC")
-        ,right :newImage(6,10,true,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAKCAYAAACXDi8zAAAALElEQVQYV2NkgIL/////h7EZQQBZACYBokmTwGoUSBCrUTglwKrJcxUuDwIA1ZUn+73T4WEAAAAASUVORK5CYII=")
-    },
+    ,bonely  :newImage(16,16,true,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfElEQVQ4T61TWwrAMAib9z/0Rh9CahNRWH8sVVON0Z513m2HMbj7O75hvA0HJkPudXWQI74DQMEpalZG9LF+PaZS3eTAT+SiBcCIjMyzj9IpqNEdNGRllgEyIeFvtM3qGFmlM/cXgKqUmb5auyClzAQUiZXqjhzItRWKtQ8f1h4KTIkAFgAAAABJRU5ErkJgggAA")
 };
 
 var imgShadow = function(img,r=255,g=255,b=255,a=1,wait=false){
     let w=img.width,h=img.height;
     fakeCanvas.width = w;
     fakeCanvas.height= h;
+    ctxF.globalCompositeOperation = "source-over";
     ctxF.clearRect(0,0,w,h);
-    ctxF.fillStyle = `rgba(${r},${g},${b},${a})`;
-    ctxF.globalCompositeOperation = "xor";
     ctxF.drawImage(img,0,0);
-    ctxF.fillRect(0,0,w,h); //Makes a negatove
-    ctxF.fillRect(0,0,w,h); //Fills the negative
+    ctxF.fillStyle = `rgba(${r},${g},${b},${a})`;
+    ctxF.globalCompositeOperation = "source-in";
+    ctxF.fillRect(0,0,w,h);
     let newImg = new Image(w,h);
     if(wait){
         WAIT++;
@@ -61,17 +56,13 @@ var drawImgBlend = function(ctx,img,x,y){
     
     ctx.globalAlpha = oldAlpha;
     ctx.globalCompositeOperation = oldComp;
-}
-
+};
 var Bone = class{
-    constructor(imgs=sprites.defBone,r=255,g=255,b=255,a=1,rodW=6,wait=false){
-        this.top   = imgShadow(imgs.top   ,r,g,b,a,wait);
-        this.bottom= imgShadow(imgs.bottom,r,g,b,a,wait);
-        this.left  = imgShadow(imgs.left  ,r,g,b,a,wait);
-        this.right = imgShadow(imgs.right ,r,g,b,a,wait);
-        this.w=this.top.width;
-        this.h=this.top.height;
-        this.rodOff=Math.round((this.top.width-rodW)/2);
+    constructor(imgs=sprites.bonely,r=255,g=255,b=255,a=1,sprW=10,rodW=6,wait=false){
+        this.sheet = imgShadow(imgs,r,g,b,a,wait);
+        this.w = sprW;
+        this.h = this.sheet.width - sprW;
+        this.rodOff = Math.round((this.w-rodW)/2);
         this.fill=`rgba(${r},${g},${b},${a})`;
     }
     draw(ctx,x,y,l,lateral=false){
@@ -79,26 +70,23 @@ var Bone = class{
         let oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){
-            ctx.drawImage(this.left,x,y);
+            ctx.drawImage(this.sheet          ,0,0,this.h,this.w,x         ,y,this.h,this.w);
+            ctx.drawImage(this.sheet,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
             ctx.fillRect(x+this.h,y+this.rodOff,l-this.h-this.h,this.w-this.rodOff*2);
-            ctx.drawImage(this.right,x+l-this.h,y);
         }else{
-            ctx.drawImage(this.top,x,y);
+            ctx.drawImage(this.sheet,this.h,0,this.w,this.h,x,y         ,this.w,this.h);
+            ctx.drawImage(this.sheet,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
             ctx.fillRect(x+this.rodOff,y+this.h,this.w-this.rodOff*2,l-this.h-this.h);
-            ctx.drawImage(this.bottom,x,y+l-this.h);
         }
         ctx.fillStyle = oldFill;
     }
     setRGBA(r=255,g=255,b=255,a=1,wait=false){
         if(wait) WAIT++;
+        this.sheet = imgShadow(this.sheet,r,g,b,a,wait);
         this.fill=`rgba(${r},${g},${b},${a})`;
-        this.top   = imgShadow(this.top   ,r,g,b,a,wait);
-        this.bottom= imgShadow(this.bottom,r,g,b,a,wait);
-        this.left  = imgShadow(this.left  ,r,g,b,a,wait);
-        this.right = imgShadow(this.right ,r,g,b,a,wait);
         if(wait) WAIT--;
     }
-}
+};
 
 let clamp = function(num,min,max){
     if(num < min) return min;
@@ -146,10 +134,11 @@ var Color = class{
     }
     set source(s){
         let {r,g,b,a} = s;
+        if(!a && a!==0) a=1;
         this._source.r = r;
         this._source.g = g;
         this._source.b = b;
-        this._source.a = a||1;
+        this._source.a = a;
         this._resulted = false;
     }
     get hueRot(){
@@ -175,7 +164,7 @@ var Color = class{
             let {r,g,b,a} = this._result;
             return {r:r,g:g,b:b,a:a};
         }
-        let {r,g,b,a} = this.source;
+        let {r,g,b,a} = this._source;
         let mat = matCache[this.hueRot]||this._hueMatrix;
         let newR = clamp(round(r*mat[0] + g*mat[1] + b*mat[2]),0,255);
         let newG = clamp(round(r*mat[2] + g*mat[0] + b*mat[1]),0,255);
@@ -186,7 +175,11 @@ var Color = class{
         this._resulted = true;
         return {r:newR,g:newG,b:newB,a:a};
     }
-}
+    get resultCSS(){
+        let {r,g,b,a} = this.result;
+        return `rgba(${r},${g},${b},${a})`;
+    }
+};
 
 
 }//End of scope

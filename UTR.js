@@ -296,7 +296,7 @@ function control(p){
     if(p.y == oldY) p.dY = 0;
 }
 //Enemy shit
-var bone = new Bone(sprites.defBone,255,255,255,1,6,true);
+var bone = new Bone(sprites.bonely,255,255,255,1,10,6,true);
 var boneColor = new Color("#FF0000");
 //And now we ROLL.
 ctx0.fillStyle = "#000000";
@@ -335,12 +335,14 @@ function frame(){
             ctx1.stroke();
         }
     }
-    for(let i=0;i<50;i+=2){
+    boneColor.hueRot = tick*4;
+    let {r,g,b} = boneColor.result;
+    bone.setRGBA(r,g,b,1,true);
+    for(let i=0;i<60;i++){
         boneColor.hueRot = (i+tick)*4;
         let {r,g,b} = boneColor.result;
         bone.fill = `rgba(${r},${g},${b},1)`;
-        bone.draw(ctx1,100+i*10,100+(i+tick  )%100,200-((i+tick  )%100)*2);
-        bone.draw(ctx1,110+i*10,100+(i+tick+1)%100,200-((i+tick+1)%100)*2);
+        bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
     }
     
     tick++;

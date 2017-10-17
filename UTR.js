@@ -1,5 +1,5 @@
 "use strict";
-/*global WAIT,sData,data2img,drawImgBlend,Bone */
+/*global WAIT,imgShadow,sprites,drawImgBlend,Bone,Color */
 
 //canvas setup
 var canvas0 = document.getElementById('canvas0');
@@ -64,7 +64,7 @@ var colors = { //The pallets of the standard 7 colors; keep in mind the default 
     indigo:[0,0,255],
     violet:[211,54,217]
 };
-var defHeart = data2img(sData.defHeart,255,66,66,1);
+var defHeart = sprites.defHeart;
 function newPlayer(color,variant,p){
     p=p||{};
     var newP = {
@@ -81,7 +81,7 @@ function newPlayer(color,variant,p){
         touching:[]
     };
     if(colors[color]){
-        newP.sprite = data2img(sData.heart,...colors[color],1);
+        newP.sprite = imgShadow(sprites.heart,...colors[color],1);
     }else{
         newP.sprite = defHeart; //Default heart
     }
@@ -139,11 +139,11 @@ for(let id=0;id<players.length;id++){
     players[id].ID = id;
 }
 //Setting up the control-schemes and gameplay
-function clamp(num,min,max){
+var clamp = function(num,min,max){
     if(num < min) return min;
     if(max < num) return max;
     return num;
-}
+};
 function inRange(num,min,max){
     return (num >= min)&&(num <= max);
 }
@@ -296,12 +296,13 @@ function control(p){
     if(p.y == oldY) p.dY = 0;
 }
 //Enemy shit
-var bone = new Bone(sData.bone,255,255,255,1);
+var bone = new Bone(sprites.defBone,255,255,255,1,6,true);
+var boneColor = new Color("#FF0000");
 //And now we ROLL.
-var round = Math.round;
 ctx0.fillStyle = "#000000";
 ctx0.fillRect(0,0,800,600);
-var pi2 = Math.PI*2;
+let round = Math.round;
+let pi2 = Math.PI*2;
 var tick=0;
 function frame(){
     if(WAIT>0){
@@ -333,11 +334,16 @@ function frame(){
             ctx1.stroke();
         }
     }
-    bone.setRGBA(tick%255,tick%255,255,1,true);
-    for(let i=0;i<50;i++){
-        bone.draw(ctx1,100+i*10,100+(i+tick)%100,200-((i+tick)%100)*2);
+    for(let i=0;i<20;i+=4){
+        boneColor.hueRot = (i+tick)*4;
+        let {r,g,b} = boneColor.result;
+        bone.setRGBA(r,g,b,1);
+        bone.draw(ctx1,100+i*10,100+(i+tick  )%100,200-((i+tick  )%100)*2);
+        bone.draw(ctx1,110+i*10,100+(i+tick+1)%100,200-((i+tick+1)%100)*2);
+        bone.draw(ctx1,120+i*10,100+(i+tick+2)%100,200-((i+tick+2)%100)*2);
+        bone.draw(ctx1,130+i*10,100+(i+tick+3)%100,200-((i+tick+3)%100)*2);
     }
-    bone.draw(ctx1,100,195,500,true); //If sixth arg is true, sideways
+    //bone.draw(ctx1,100,195,500,true); //If sixth arg is true, sideways
     
     tick++;
     window.requestAnimationFrame(frame);

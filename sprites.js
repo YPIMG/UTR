@@ -1,7 +1,7 @@
 "use strict";
 /*global Image,ImageData*/
-{
 var WAIT = 0;
+{
 
 let fakeCanvas = document.createElement('canvas');
 let ctxF = fakeCanvas.getContext('2d');
@@ -75,6 +75,7 @@ var Bone = class{
         this.fill=`rgba(${r},${g},${b},${a})`;
     }
     draw(ctx,x,y,l,lateral=false){
+        l = clamp(l,this.h*2,l);
         let oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){

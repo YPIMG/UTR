@@ -309,6 +309,7 @@ function frame(){
         window.requestAnimationFrame(frame);
         return;
     }
+    WAIT++;
     for(let id=0;id<players.length;id++){
         let p=players[id];
         if(!p.done){
@@ -334,18 +335,18 @@ function frame(){
             ctx1.stroke();
         }
     }
-    for(let i=0;i<20;i+=4){
+    for(let i=0;i<50;i+=4){
         boneColor.hueRot = (i+tick)*4;
         let {r,g,b} = boneColor.result;
-        bone.setRGBA(r,g,b,1);
+        bone.fill = `rgba(${r},${g},${b},1)`;
         bone.draw(ctx1,100+i*10,100+(i+tick  )%100,200-((i+tick  )%100)*2);
         bone.draw(ctx1,110+i*10,100+(i+tick+1)%100,200-((i+tick+1)%100)*2);
         bone.draw(ctx1,120+i*10,100+(i+tick+2)%100,200-((i+tick+2)%100)*2);
         bone.draw(ctx1,130+i*10,100+(i+tick+3)%100,200-((i+tick+3)%100)*2);
     }
-    //bone.draw(ctx1,100,195,500,true); //If sixth arg is true, sideways
     
     tick++;
+    WAIT--;
     window.requestAnimationFrame(frame);
 }
 window.requestAnimationFrame(frame);

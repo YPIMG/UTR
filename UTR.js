@@ -1,5 +1,5 @@
 "use strict";
-/*global WAIT,imgShadow,sprites,drawImgBlend,Bone,Color */
+/*global imgShadow,sprites,drawImgBlend,Bone */
 
 //canvas setup
 var canvas0 = document.getElementById('canvas0');
@@ -56,15 +56,14 @@ function keyDown(k){
 }
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
-    red:[255,0,0],
-    orange:[255,127,0],
-    yellow:[255,255,0],
-    green:[0,255,0],
-    blue:[66,226,255],//42e2ff
-    indigo:[0,0,255],
-    violet:[211,54,217]
+    red:"rgb(255,0,0)",
+    orange:"rgb(255,127,0)",
+    yellow:"rgb(255,255,0)",
+    green:"rgb(0,255,0)",
+    blue:"rgb(66,226,255)",
+    indigo:"rgb(0,0,255)",
+    violet:"rgb(211,54,217)"
 };
-var defHeart = sprites.defHeart;
 function newPlayer(color,variant,p){
     p=p||{};
     var newP = {
@@ -81,9 +80,9 @@ function newPlayer(color,variant,p){
         touching:[]
     };
     if(colors[color]){
-        newP.sprite = imgShadow(sprites.heart,...colors[color],1);
+        newP.sprite = imgShadow(sprites.heart,colors[color],true);
     }else{
-        newP.sprite = defHeart; //Default heart
+        newP.sprite = sprites.defHeart; //Default heart
     }
     switch(color){
         case "yellow":
@@ -296,8 +295,7 @@ function control(p){
     if(p.y == oldY) p.dY = 0;
 }
 //Enemy shit
-var bone = new Bone(sprites.bonely,255,255,255,1,10,6,true);
-var boneColor = new Color("#FF0000");
+var bone = new Bone(sprites.bonely,10,6,"rgba(255,255,255,1)");
 //And now we ROLL.
 ctx0.fillStyle = "#000000";
 ctx0.fillRect(0,0,800,600);
@@ -305,11 +303,7 @@ let round = Math.round;
 let pi2 = Math.PI*2;
 var tick=0;
 function frame(){
-    if(WAIT>0){
-        window.requestAnimationFrame(frame);
-        return;
-    }
-    WAIT++;
+    tick++;
     for(let id=0;id<players.length;id++){
         let p=players[id];
         if(!p.done){
@@ -335,18 +329,11 @@ function frame(){
             ctx1.stroke();
         }
     }
-    boneColor.hueRot = tick*4;
-    let {r,g,b} = boneColor.result;
-    bone.setRGBA(r,g,b,1,true);
+    bone.setCSSColor(`hsl(${tick*4},100%,50%)`);
     for(let i=0;i<60;i++){
-        boneColor.hueRot = (i+tick)*4;
-        let {r,g,b} = boneColor.result;
-        bone.fill = `rgba(${r},${g},${b},1)`;
+        bone.fill = `hsl(${(i+tick)*4},100%,50%)`;
         bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
     }
-    
-    tick++;
-    WAIT--;
     window.requestAnimationFrame(frame);
 }
 window.requestAnimationFrame(frame);

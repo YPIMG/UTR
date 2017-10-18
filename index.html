@@ -11,7 +11,7 @@
     </head>
     <body>
         <script type="text/javascript">
-            window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+            window.onerror = function(errorMsg, url, lineNumber) {
                 alert(`Error occured at line ${lineNumber} in ${url}: ${errorMsg}`);
                 return false;
             }

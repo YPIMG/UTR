@@ -1,58 +1,72 @@
 "use strict";
-/*global imgShadow,sprites,drawImgBlend,Bone */
+/*global imgShadow,sprites,drawImgBlend,Bone,MonoFont */
 
 //canvas setup
 var canvas0 = document.getElementById('canvas0');
 var canvas1 = document.getElementById('canvas1');
-var ctx0 = canvas0.getContext('2d');
-var ctx1 = canvas1.getContext('2d');
+var canvasH0= document.getElementById('HUD0');
+var canvasH1= document.getElementById('HUD1');
+var ctx0 = canvas0 .getContext('2d');
+var ctx1 = canvas1 .getContext('2d');
+var ctxH0= canvasH0.getContext('2d');
+var ctxH1= canvasH1.getContext('2d');
+ctx0 .imageSmoothingEnabled = false;
+ctx1 .imageSmoothingEnabled = false;
+ctxH0.imageSmoothingEnabled = false;
+ctxH1.imageSmoothingEnabled = false;
 //Keyboard handling
-var prKeys=[];
+var prKeys={};
 window.onkeydown=function(e){
     prKeys[e.keyCode]=true;
+    prKeys[e.keyCode+","+e.location]=true;
+        console.log(e.keyCode,e.location);
     e.preventDefault();
     e.stopPropagation();
     return false;
 };
 window.onkeyup=function(e){
-    prKeys[e.keyCode]=undefined;
+    prKeys[e.keyCode] = false;
+    prKeys[e.keyCode+","+e.location]=false;
 };
 window.onblur=function(){
     prKeys=[];
 };
 function keyDown(k){
-    var ret;
-    switch(k.toLowerCase()){
+    let kA = k.split(',');
+    let code;
+    switch(kA[0].toLowerCase()){
         case "enter":
-            ret = prKeys[13];
+            code = 13;
             break;
         case "shift":
-            ret = prKeys[16];
+            code = 16;
             break;
         case "control":
         case "ctrl":
-            ret = prKeys[17];
+            code = 17;
             break;
         case "alt":
-            ret = prKeys[18];
+            code = 18;
             break;
         case "space":
-            ret = prKeys[32];
+            code = 32;
             break;
         case "left":
-            ret = prKeys[37];
+            code = 37;
             break;
         case "up":
-            ret = prKeys[38];
+            code = 38;
             break;
         case "right":
-            ret = prKeys[39];
+            code = 39;
             break;
         case "down":
-            ret = prKeys[40];
+            code = 40;
             break;
     }
-    return ret||((typeof k==="string") ? prKeys[k.charCodeAt(0)] : prKeys[k])||false;
+    if(!code) code = (typeof k==="string") ? k.charCodeAt(0) : k;
+    if(kA[1]) code = code + "," + kA[1];
+    return prKeys[code]||false;
 }
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
@@ -80,8 +94,10 @@ function newPlayer(color,variant,p){
         touching:[]
     };
     if(colors[color]){
-        newP.sprite = imgShadow(sprites.heart,colors[color],true);
+        newP.css = colors[color];
+        newP.sprite = imgShadow(sprites.heart,colors[color]);
     }else{
+        newP.css = "rgb(255,66,66)";
         newP.sprite = sprites.defHeart; //Default heart
     }
     switch(color){
@@ -117,21 +133,28 @@ var players=[
         up:"W",
         right:"D",
         down:"S",
-        special:"shift"
+        special:"shift,1"
+    }),
+    newPlayer("orange",0,{
+        left:"F",
+        up:"T",
+        right:"H",
+        down:"G",
+        special:"space"
+    }),
+    newPlayer("yellow",0,{
+        left:"J",
+        up:"I",
+        right:"L",
+        down:"K",
+        special:"enter"
     }),
     newPlayer("green",0,{
         left:"left",
         up:"up",
         right:"right",
         down:"down",
-        special:"enter"
-    }),
-    newPlayer("indigo",0,{
-        left:"F",
-        up:"T",
-        right:"H",
-        down:"G",
-        special:"space"
+        special:"shift,2"
     }),
 ];
 for(let id=0;id<players.length;id++){
@@ -268,7 +291,7 @@ function control(p){
             if(p.carryID > p.ID){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
                 players.push(p); //Put it at the end
                 players.splice(p.ID,1); //Remove it from where it was
-                players[p.ID].redo = true; //Fixes player skipping
+                players[p.ID].done = false; //Fixes player skipping
                 p.carryID--;
                 for(let i=p.ID;i<players.length;i++){ //Reassign all the IDs
                     players[i].ID = i;
@@ -289,32 +312,35 @@ function control(p){
     }
     p.x += p.dX;
     p.y += p.dY;
-    p.x = clamp(p.x,0,784);
-    p.y = clamp(p.y,0,584);
+    p.x = clamp(p.x,0,784); //800-16
+    p.y = clamp(p.y,0,584); //600-16
     if(p.x == oldX) p.dX = 0;
     if(p.y == oldY) p.dY = 0;
 }
 //Enemy shit
-var bone = new Bone(sprites.bonely,10,6,"rgba(255,255,255,1)");
+var bone = new Bone();
+
+
 //And now we ROLL.
-ctx0.fillStyle = "#000000";
-ctx0.fillRect(0,0,800,600);
+ctx0 .fillStyle = "rgb(0,0,0)";
+ctx0 .fillRect(0,0,800,600);
+ctxH0.fillStyle = "rgb(0,0,0)";
+ctxH0.fillRect(0,0,480,360);
+var cunn = new MonoFont();
+ctxH1.textBaseline = "top";
 let round = Math.round;
+let ceil = Math.ceil;
 let pi2 = Math.PI*2;
 var tick=0;
 function frame(){
     tick++;
     for(let id=0;id<players.length;id++){
         let p=players[id];
-        if(!p.done){
+        while(!p.done){
+            p.done = true;
             control(p);
-            p.done = false;
         }
-        if(p.redo){ //Fixes the player-skipping bug
-            id--;
-            p.redo = false;
-            continue;
-        }
+        p.done = false;
     }
     ctx1.clearRect(0,0,800,600);
     for(let id=0;id<players.length;id++){
@@ -323,16 +349,25 @@ function frame(){
         drawImgBlend(ctx1,p.sprite,round(p.x),round(p.y),id+1);
         
         if(p.color == "yellow" && p.cool>0){
-            ctx1.strokeStyle = "#FFFF00";
+            ctx1.strokeStyle = "rgb(255,255,0)";
             ctx1.beginPath();
             ctx1.arc(p.x+8,p.y+8,25-p.cool*2,0,pi2);
             ctx1.stroke();
         }
     }
-    bone.setCSSColor(`hsl(${tick*4},100%,50%)`);
     for(let i=0;i<60;i++){
-        bone.fill = `hsl(${(i+tick)*4},100%,50%)`;
+        bone.setCSS(`hsl(${((i+tick)*4)%360},100%,50%)`);
         bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
+    }
+    for(let id=0;id<players.length;id++){
+        let p = players[id];
+        ctxH1.fillStyle = p.css;
+        ctxH1.fillRect(0,id*30,480,30);
+        cunn.fillText(ctxH1,p.color,10,id*30+5,3);
+        ctxH1.fillStyle = "rgb(0,0,0)";
+        ctxH1.fillRect(160,id*30+5,ceil(p.maxHP*1.2),21);
+        ctxH1.fillStyle = "rgb(255,255,255)";
+        ctxH1.fillRect(160,id*30+5,ceil(p.hp*1.2),21);
     }
     window.requestAnimationFrame(frame);
 }

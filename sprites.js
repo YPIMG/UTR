@@ -2,8 +2,8 @@
 /*global Image*/
 {
 
-var fakeCanvas = document.createElement('canvas');
-var ctxF = fakeCanvas.getContext('2d');
+let fakeCanvas = document.createElement('canvas');
+let ctxF = fakeCanvas.getContext('2d');
 
 //Doing it this way lets me dynamically color a sprite
 //Highlight a zero to see the sprites easily
@@ -17,8 +17,9 @@ var sprites = {
     ,defHeart:newImage(16,16,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAABKSURBVDhPYwCB/w4O/9ExWAIK8MpjkyQWU2wACI8aMGoACFOUmMCaQQCbJCEM1YoA2BThwlAtmACbYnQMVYofYNMIwlBpJMDAAABGnylj+IhG6wAAAABJRU5ErkJggg==")
     ,bonely:newImage(16,16,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfElEQVQ4T61TWwrAMAib9z/0Rh9CahNRWH8sVVON0Z513m2HMbj7O75hvA0HJkPudXWQI74DQMEpalZG9LF+PaZS3eTAT+SiBcCIjMyzj9IpqNEdNGRllgEyIeFvtM3qGFmlM/cXgKqUmb5auyClzAQUiZXqjhzItRWKtQ8f1h4KTIkAFgAAAABJRU5ErkJgggAA")
     ,cunnilingus:newImage(569,6,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjkAAAAGAgMAAABcNmevAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJUExURUdwTP8A/////ywUgrwAAAABdFJOUwBA5thmAAABRklEQVQoz8WSMY6FMAxE418hKitV5IpQIU6JtwIqaipMBTnljsPfnm5RhJIwGcYvDoEJo6nv/x94ovUxtxuNrG3UhvX5VKJdoq3gbaMYdj5MHebYrwOTU6wkOyT/QBYVm1ieaTkl4yucUWbzUs/WRO09j/ZyDyn3rAPb+M2TC1vLugodDJ+MnI3727TbnOBDk9AZEVgPuSEoYhAP8Jcb+T9RJ7YeeeSdnh3F7HkogA9r2Qh5yn4jYUAS9opwqkQtlU8HRChqzzBfnVuu/qj3LpgnJ/n4X+ynOoTfKMhbPYr1+wINCCKtTA8f7yVfWpV5FXD740PzDsK+edSorfNf4H8lhfjxh/54/N38nb7y8TzJ+TQpnxs9/TMAciLcF7AAbxGfg5j3T6Khor78j94Pl9/Fsn6XOgi6Iq/i//qghQD2pb72Twi/vpTgyY3YSe4AAAAASUVORK5CYII=")
+    ,wonder:newImage(1042,12,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABBIAAAAMCAMAAADoFW4MAAAACVBMVEVHcEz/AP////8sFIK8AAAAAXRSTlMAQObYZgAAAt1JREFUaN7tWttigyAMDfz/R29TkdwJoHZt8aFDBiE5hCMJANQnoV/QyzkH6hPrrUtMoXdSdlW7rJy0IR/VwNcs3uu1Ovf3SmZNmsJhoa2inX8fdZGitnub7ReO9qUMe3l/2AiovvYqb3mTuzclPR1KwFKKhPNPNsqlW8ZqMtVKezDKxAidEoJSRH2268HRGFtVlDD+iyYRPWBbnkf1V0cXZWi3pJKRHak62lbD3XihPYE2tfKw5kD6tMykhGzoyHtRSpAzTShhf21SgsTEVCeicrSMHAKT6KH0rPRubWad9Cnd7qKEsliEiy60hylBLlZERxollDWr6yX3IbSeE0+VeNJ9ixKUTz/ISYpOGFXZB44qwr0VxH6kMp0/LVgbX0u3fYfNUTeJldnUwBVOKm05CQDol0ww80J7Cm3AvpxKEKAxAgsu9B1AkxJQzZtTAkaKvCJK2AqLEu6kBLpZA1iUcBcliLBBpQScSyBBj6ANnxJqApIFH+L9BELudUQ6Q8Zj2c43cFC0vswImkuoLWqK5A8cMLd8DafLNBipbcyQhjtpY5TOrbslGSE44KQm1vJrgyafurJGCQvtCbTpcufLPkwJ4OYSHqEEBTI3fSTTHxI46KaEqiDdJbytk4Jdr5DwhJOCmx7+Ekr4D2hPUIK5pu4LHFQcWPTOA4FIQBGpbwcOdKKgaysY38rOJrx6trL+uAydya2slMAdpqYTW5Sw0B5FWw8cdErQ8wTfSglqepEazkFYTroo4bMooZ1ebB1C0hMk/xCSSUr6OZQeODhBwUyb9iEkh/mqY1A7nytPd8NxaiiihbAtnu2yrEnzJcgTaHr4SB1soT2KtnEIOZBLsNKLSjAeuqrUogQRFtkxpBX1QU96MXZVCcEMgYRR5PIMZ/CAk8Kok4IRE0Mk0tVsty6QqdJupYSFdhBt66pSLHC490Jz4Dbjay40u5TwsRearcldF5o/E23jQvMPg/YxlUQRwh0AAAAASUVORK5CYII=")
 };
-var shadowCache = {};
+let shadowCache = {};
 var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
     let store = shadowCache[key];
     if(key !== undefined){
@@ -69,8 +70,8 @@ let clamp = function(num,min,max){
 };
 var Bone = class{
     constructor(sheet=sprites.bonely,sprW=10,rodW=6,cssColor="rgb(255,255,255)",key="bonely"){
-        this.sheet = sheet
-        this.sheetAlt = imgShadow(sheet,cssColor,key);
+        this._sheet = sheet;
+        this.sheet = imgShadow(sheet,cssColor,key);
         this.w = sprW;
         this.h = this.sheet.width - sprW;
         this.rodOff = Math.round((this.w-rodW)/2);
@@ -82,18 +83,18 @@ var Bone = class{
         let oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){
-            ctx.drawImage(this.sheetAlt,0     ,0     ,this.h,this.w,x         ,y,this.h,this.w);
-            ctx.drawImage(this.sheetAlt,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
+            ctx.drawImage(this.sheet,0     ,0     ,this.h,this.w,x         ,y,this.h,this.w);
+            ctx.drawImage(this.sheet,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
             ctx.fillRect(x+this.h,y+this.rodOff,l-this.h-this.h,this.w-this.rodOff*2);
         }else{
-            ctx.drawImage(this.sheetAlt,this.h,0,this.w,this.h,x,y         ,this.w,this.h);
-            ctx.drawImage(this.sheetAlt,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
+            ctx.drawImage(this.sheet,this.h,0,this.w,this.h,x,y         ,this.w,this.h);
+            ctx.drawImage(this.sheet,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
             ctx.fillRect(x+this.rodOff,y+this.h,this.w-this.rodOff*2,l-this.h-this.h);
         }
         ctx.fillStyle = oldFill;
     }
     setCSS(cssColor){
-        this.sheetAlt = imgShadow(this.sheet,cssColor,this.key);
+        this.sheet = imgShadow(this._sheet,cssColor,this.key);
         this.fill=cssColor;
     }
 };
@@ -106,6 +107,7 @@ var MonoFont = class{
         this.cH = this.sheet.height;
     }
     fillText(ctx,text,x,y,scale=1){
+        text = text.toString();
         scale = Math.round(scale);
         switch(ctx.textBaseline){
             case "top":
@@ -123,24 +125,62 @@ var MonoFont = class{
         }
         let len = text.length;
         for(let i=0;i<len;i++){
-            let c = clamp(text.charCodeAt(i),32,127)-32;
+            let c = text.charCodeAt(i)-32;
+            if((c < 0)||(c > 94)) c = 0;
             ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*this.off*scale,y,this.cW*scale,this.cH*scale);
         }
     }
 };
+let defW = [];
+for(let i=0;i<94;i++){
+    defW[i] = 11;
+}
+defW[ 1] = 5;
+defW[ 7] = 5;
+defW[12] = 5;
+defW[14] = 5;
+defW[26] = 5;
+defW[27] = 5;
+defW[41] = 5;
+defW[65] = 5;
+defW[73] = 5;
+defW[92] = 5;
+defW[17] = 6;
+defW[28] = 6;
+defW[30] = 6;
+defW[ 8] = 7;
+defW[ 9] = 7;
+defW[29] = 7;
+defW[60] = 7;
+defW[62] = 7;
+defW[63] = 7;
+defW[64] = 7;
+defW[91] = 7;
+defW[93] = 7;
+defW[11] = 9;
+defW[13] = 9;
+defW[15] = 9;
+defW[61] = 9;
+defW[94] = 9;
+defW[45] =17;
+defW[55] =17;
+defW[77] =17;
+defW[87] =17;
 var WidthFont = class{
-    constructor(sheet,cWs,space=1){
+    constructor(sheet=sprites.wonder,cWs=defW,space=1){
         this.sheet = sheet;
-        this.offs = [];
+        this.offs = [0];
         let n = 0;
         let len = cWs.length;
-        for(let i = 0;i<len;i++){
-            n += cWs[i]||cWs[0];
+        for(let i = 1;i<len;i++){
+            n += cWs[i-1]+space;
             this.offs[i] = n;
         }
+        this.cWs = cWs.slice();
         this.cH = this.sheet.height;
     }
     fillText(ctx,text,x,y,scale=1){
+        text = text.toString();
         scale = Math.round(scale);
         switch(ctx.textBaseline){
             case "top":
@@ -159,9 +199,10 @@ var WidthFont = class{
         let len = text.length;
         let off = 0;
         for(let i=0;i<len;i++){
-            off += this.offs[c];
-            let c = clamp(text.charCodeAt(i),32,127)-32;
-            ctx.drawImage(this.sheet,this.offs[c],0,this.cW,this.cH,x+off,y,this.cW*scale,this.cH*scale);
+            let c = text.charCodeAt(i)-32;
+            if((c < 0)||(c > 94)) c = 0;
+            ctx.drawImage(this.sheet,this.offs[c],0,this.cWs[c],this.cH,x+off,y,this.cWs[c]*scale,this.cH*scale);
+            off += this.cWs[c]*scale;
         }
     }
 }

@@ -1,5 +1,5 @@
 "use strict";
-/*global imgShadow,sprites,drawImgBlend,Bone,MonoFont */
+/*global imgShadow,sprites,drawImgBlend,Bone,MonoFont,WidthFont */
 
 //canvas setup
 var canvas0 = document.getElementById('canvas0');
@@ -17,66 +17,49 @@ ctxH1.imageSmoothingEnabled = false;
 //Keyboard handling
 var prKeys={};
 window.onkeydown=function(e){
-    prKeys[e.keyCode]=true;
-    prKeys[e.keyCode+","+e.location]=true;
-        console.log(e.keyCode,e.location);
+    prKeys[e.key] = true;
+    prKeys[e.key+","+e.location] = true;
     e.preventDefault();
     e.stopPropagation();
     return false;
 };
 window.onkeyup=function(e){
-    prKeys[e.keyCode] = false;
-    prKeys[e.keyCode+","+e.location]=false;
+    delete prKeys[e.key];
+    delete prKeys[e.key+","+e.location];
 };
 window.onblur=function(){
     prKeys=[];
 };
+var keyConv = {
+    enter:"Enter",
+    shift:"shift",
+    space:" ",
+    control:"Control",
+    ctrl:"Control",
+    left:"ArrowLeft",
+    up:"ArrowUp",
+    right:"ArrowRight",
+    down:"ArrowDown"
+};
 function keyDown(k){
-    let kA = k.split(',');
-    let code;
-    switch(kA[0].toLowerCase()){
-        case "enter":
-            code = 13;
-            break;
-        case "shift":
-            code = 16;
-            break;
-        case "control":
-        case "ctrl":
-            code = 17;
-            break;
-        case "alt":
-            code = 18;
-            break;
-        case "space":
-            code = 32;
-            break;
-        case "left":
-            code = 37;
-            break;
-        case "up":
-            code = 38;
-            break;
-        case "right":
-            code = 39;
-            break;
-        case "down":
-            code = 40;
-            break;
+    let l = k.split(',');
+    if(k.charAt(0) == ","){
+        l[1] = l[0];
+        l[0] = ",";
     }
-    if(!code) code = (typeof k==="string") ? k.charCodeAt(0) : k;
-    if(kA[1]) code = code + "," + kA[1];
-    return prKeys[code]||false;
+    let key = keyConv[l[0].toLowerCase()] || l[0].toLowerCase();
+    if(l[1]) key = key + "," + l[1];
+    return prKeys[key]||false;
 }
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
     red:"rgb(255,0,0)",
-    orange:"rgb(255,127,0)",
+    orange:"rgb(252,166,0)",
     yellow:"rgb(255,255,0)",
-    green:"rgb(0,255,0)",
+    green:"rgb(0,192,0)",
     blue:"rgb(66,226,255)",
-    indigo:"rgb(0,0,255)",
-    violet:"rgb(211,54,217)"
+    indigo:"rgb(0,60,255)",
+    violet:"rgb(213,53,217)"
 };
 function newPlayer(color,variant,p){
     p=p||{};
@@ -136,20 +119,34 @@ var players=[
         special:"shift,1"
     }),
     newPlayer("orange",0,{
-        left:"F",
-        up:"T",
-        right:"H",
-        down:"G",
-        special:"space"
+        left:"C",
+        up:"F",
+        right:"B",
+        down:"V",
+        special:"X"
     }),
     newPlayer("yellow",0,{
-        left:"J",
-        up:"I",
-        right:"L",
-        down:"K",
-        special:"enter"
+        left:"G",
+        up:"Y",
+        right:"J",
+        down:"H",
+        special:"space"
     }),
     newPlayer("green",0,{
+        left:"M",
+        up:"K",
+        right:".",
+        down:",",
+        special:"N"
+    }),
+    newPlayer("blue",0,{
+        left:"L",
+        up:"P",
+        right:"'",
+        down:";",
+        special:"enter"
+    }),
+    newPlayer("indigo",0,{
         left:"left",
         up:"up",
         right:"right",
@@ -178,9 +175,9 @@ function control(p){
         if(p.ID==i)continue;
         let pT = players[i];
         if(p.ID>i){ // If pT's coords were already done this frame, undo them for this calculation
-            p.touching[i] = inRange(p.x-pT.x+pT.dX,-16,16) && inRange(p.y-pT.y+pT.dY,-16,16);
+            p.touching[i] = inRange(p.x-(pT.x-pT.dX),-16,16) && inRange(p.y-(pT.y-pT.dY),-16,16);
         }else{
-            p.touching[i] = inRange(p.x-pT.x      ,-16,16) && inRange(p.y-pT.y      ,-16,16);
+            p.touching[i] = inRange(p.x- pT.x       ,-16,16) && inRange(p.y- pT.y       ,-16,16);
         }
     }
     var dX = keyDown(p.right)-keyDown(p.left);
@@ -221,10 +218,10 @@ function control(p){
         case "blue":
             let dXY = (dX&&dY) ? sqrt1_2 : 1;
             p.cool--;
-            if(spec && p.cool<=-140){ //30 FPS, (140+10)/30 = 5 sec cooldown
+            if(spec && p.cool<=-140 && (dX||dY)){ //30 FPS, (140+10)/30 = 5 sec cooldown
                 p.cool=10;
-                p.dX = p.dX*5; //Dashing around at the speed of 15 pixels/frame
-                p.dY = p.dY*5;
+                p.dX = dX*15; //Dashing around at the speed of 15 pixels/frame
+                p.dY = dY*15;
             }else if(p.cool<=0){
                 p.dX = dX*dXY*3;
                 p.dY = dY*dXY*3;
@@ -317,22 +314,42 @@ function control(p){
     if(p.x == oldX) p.dX = 0;
     if(p.y == oldY) p.dY = 0;
 }
-//Enemy shit
-var bone = new Bone();
-
-
 //And now we ROLL.
+var cunnie = new MonoFont();
+var wonder = new WidthFont();
+let round = Math.round;
+let ceil = Math.ceil;
+let pi2 = Math.PI*2;
+var lastTime = performance.now(); /*global performance*/
+var tick=0;
+var curBattleFrame = ()=>{};
+
 ctx0 .fillStyle = "rgb(0,0,0)";
 ctx0 .fillRect(0,0,800,600);
 ctxH0.fillStyle = "rgb(0,0,0)";
 ctxH0.fillRect(0,0,480,360);
-var cunn = new MonoFont();
-ctxH1.textBaseline = "top";
-let round = Math.round;
-let ceil = Math.ceil;
-let pi2 = Math.PI*2;
-var tick=0;
-function frame(){
+ctxH1.textBaseline = "top"; //I like printing text with a top-right corner, thank you very much
+for(let id=0;id<players.length;id++){
+    let p = players[id];
+    ctxH1.fillStyle = p.css;
+    ctxH1.fillRect(0,id*30,480,30);
+    cunnie.fillText(ctxH1,p.color,10,id*30+5,3);
+    wonder.fillText(ctxH1,"HP",132,id*30+10,1);
+    ctxH1.fillStyle = "rgb(0,0,0)";
+    ctxH1.fillRect(160,id*30+5,ceil(p.maxHP*1.2),21);
+    cunnie.fillText(ctxH1,"  /"+p.maxHP,225,id*30+5,3);
+}
+function firstBattleF(){
+    var bone = new Bone();
+    curBattleFrame = ()=>{
+        for(let i=0;i<60;i++){
+            bone.setCSS(`hsl(${((i+tick)*4)%360},100%,50%)`);
+            bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
+        }
+    };
+}
+curBattleFrame = firstBattleF;
+function doBattleFrame(time){ //Okay, *NOW* we roll
     tick++;
     for(let id=0;id<players.length;id++){
         let p=players[id];
@@ -345,9 +362,7 @@ function frame(){
     ctx1.clearRect(0,0,800,600);
     for(let id=0;id<players.length;id++){
         let p = players[id];
-        
         drawImgBlend(ctx1,p.sprite,round(p.x),round(p.y),id+1);
-        
         if(p.color == "yellow" && p.cool>0){
             ctx1.strokeStyle = "rgb(255,255,0)";
             ctx1.beginPath();
@@ -355,20 +370,13 @@ function frame(){
             ctx1.stroke();
         }
     }
-    for(let i=0;i<60;i++){
-        bone.setCSS(`hsl(${((i+tick)*4)%360},100%,50%)`);
-        bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
-    }
+    curBattleFrame(time);
     for(let id=0;id<players.length;id++){
-        let p = players[id];
-        ctxH1.fillStyle = p.css;
-        ctxH1.fillRect(0,id*30,480,30);
-        cunn.fillText(ctxH1,p.color,10,id*30+5,3);
-        ctxH1.fillStyle = "rgb(0,0,0)";
-        ctxH1.fillRect(160,id*30+5,ceil(p.maxHP*1.2),21);
+        let hp = players[id].hp;
         ctxH1.fillStyle = "rgb(255,255,255)";
-        ctxH1.fillRect(160,id*30+5,ceil(p.hp*1.2),21);
+        ctxH1.fillRect(160,id*30+5,ceil(hp*1.2),21);
+        cunnie.fillText(ctxH1,hp,225,id*30+5,3);
     }
-    window.requestAnimationFrame(frame);
+    window.requestAnimationFrame(doBattleFrame);
 }
-window.requestAnimationFrame(frame);
+window.requestAnimationFrame(doBattleFrame);

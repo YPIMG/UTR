@@ -13,11 +13,15 @@
         </script>
         <canvas id="canvas0" width="800" height="600" style="position:absolute; top:0px; left:0px;   z-index:0;" oncontextmenu="return false;"></canvas>
         <canvas id="canvas1" width="800" height="600" style="position:absolute; top:0px; left:0px;   z-index:1;" oncontextmenu="return false;"></canvas>
+        <canvas id="HUD0"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
         <a href="." onClick="this.href=this.href+'?'+new Date().getTime();">
-            <canvas id="HUD0"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
-            <canvas id="HUD1"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:1;" oncontextmenu="return false;"></canvas>
+        <canvas id="HUD1"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:1;" oncontextmenu="return false;"></canvas>
         </a>
-        <script type="text/javascript" src="sprites.js"></script>
-        <script type="text/javascript" src="UTR.js" onClick=""></script>
+        <script type="text/javascript">
+            var sprites = document.createElement("script");
+            var UTR = document.createElement("script");
+        </script>
+        <script type="text/javascript" src="sprites.js?5"></script>
+        <script type="text/javascript" src="UTR.js?5"></script>
     </body>
 </html>

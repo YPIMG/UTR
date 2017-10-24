@@ -1,15 +1,15 @@
 "use strict";
-/*global imgShadow,sprites,drawImgBlend,Bone,MonoFont,WidthFont */
-
+/*global imgShadow,sprites,drawImgBlend,Bone,MonoFont,WidthFont */ //sprites.js
+/*global DataChannel*/ //DataChannel API
 //canvas setup
-var canvas0 = document.getElementById('canvas0');
-var canvas1 = document.getElementById('canvas1');
-var canvasH0= document.getElementById('HUD0');
-var canvasH1= document.getElementById('HUD1');
-var ctx0 = canvas0 .getContext('2d');
-var ctx1 = canvas1 .getContext('2d');
-var ctxH0= canvasH0.getContext('2d');
-var ctxH1= canvasH1.getContext('2d');
+var canvas0  = document.getElementById('canvas0');
+var canvas1  = document.getElementById('canvas1');
+var canvasH0 = document.getElementById('HUD0');
+var canvasH1 = document.getElementById('HUD1');
+var ctx0  = canvas0 .getContext('2d');
+var ctx1  = canvas1 .getContext('2d');
+var ctxH0 = canvasH0.getContext('2d');
+var ctxH1 = canvasH1.getContext('2d');
 ctx0 .imageSmoothingEnabled = false;
 ctx1 .imageSmoothingEnabled = false;
 ctxH0.imageSmoothingEnabled = false;
@@ -32,7 +32,7 @@ window.onblur=function(){
 };
 var keyConv = {
     enter:"Enter",
-    shift:"shift",
+    shift:"Shift",
     space:" ",
     control:"Control",
     ctrl:"Control",
@@ -41,7 +41,7 @@ var keyConv = {
     right:"ArrowRight",
     down:"ArrowDown"
 };
-function keyDown(k){
+function isKeyDown(k){
     let l = k.split(',');
     if(k.charAt(0) == ","){
         l[1] = l[0];
@@ -61,10 +61,33 @@ var colors = { //The pallets of the standard 7 colors; keep in mind the default 
     indigo:"rgb(0,60,255)",
     violet:"rgb(213,53,217)"
 };
-function newPlayer(color,variant,p){
-    p=p||{};
-    var newP = {
-        color:color,variant:variant,ID:p.ID,
+function newPlayer(color,p={},online=false){
+    let newP;
+    if(online){
+        newP = {
+            color:color||p.color||"red",id:p.id,
+            x:p.x||0,y:p.y||0,
+            maxHP:p.maxHP,
+            maxInv:p.maxInv,
+            hp:p.hp||p.maxHP,
+            inv:p.inv||p.maxInv,
+            online:true,input:{
+                dX:0,dY:0,spec:false
+            }
+        };
+        let c = colors[newP.color];
+        if(c){
+            newP.css = c;
+            newP.sprite = imgShadow(sprites.heart,c);
+        }else{
+            newP.css = "rgb(255,66,66)";
+            newP.sprite = sprites.defHeart;
+        }
+        return newP;
+    }
+    p.id = p.id||(""+Date.now()+Math.floor(Math.random()*100000));
+    newP = {
+        color:color||p.color||"red",id:p.id,
         left:p.left||"left",
         up:p.up||"up",
         right:p.right||"right",
@@ -72,13 +95,15 @@ function newPlayer(color,variant,p){
         special:p.special||"shift",
         dX:p.dX||0,dY:p.dY||0,
         x:p.x||0,y:p.y||0,
-        maxHP:p.maxHP||20,
-        maxInv:p.maxInv||20,
+        online:false,input:{
+            dX:0,dY:0,spec:false
+        },
         touching:[]
     };
-    if(colors[color]){
-        newP.css = colors[color];
-        newP.sprite = imgShadow(sprites.heart,colors[color]);
+    let c = colors[newP.color];
+    if(c){
+        newP.css = c;
+        newP.sprite = imgShadow(sprites.heart,c);
     }else{
         newP.css = "rgb(255,66,66)";
         newP.sprite = sprites.defHeart; //Default heart
@@ -106,56 +131,70 @@ function newPlayer(color,variant,p){
             newP.maxInv = 35; //Base stat is 20, add 15 for items in the real game (I'll balance later)
             break;
     }
+    newP.maxHP = p.maxHP||20,
+    newP.maxInv = p.maxInv||20,
     newP.hp = newP.maxHP;
     newP.inv= newP.maxInv;
+    newP.online = false;
     return newP;
 }
 var players=[
-    newPlayer("red",0,{
+    newPlayer(window.prompt("What colour do you wanna be?")||"red",{
         left:"A",
         up:"W",
         right:"D",
         down:"S",
         special:"shift,1"
     }),
-    newPlayer("orange",0,{
-        left:"C",
-        up:"F",
-        right:"B",
-        down:"V",
-        special:"X"
-    }),
-    newPlayer("yellow",0,{
-        left:"G",
-        up:"Y",
-        right:"J",
-        down:"H",
-        special:"space"
-    }),
-    newPlayer("green",0,{
-        left:"M",
-        up:"K",
-        right:".",
-        down:",",
-        special:"N"
-    }),
-    newPlayer("blue",0,{
-        left:"L",
-        up:"P",
-        right:"'",
-        down:";",
-        special:"enter"
-    }),
-    newPlayer("indigo",0,{
-        left:"left",
-        up:"up",
-        right:"right",
-        down:"down",
-        special:"shift,2"
-    }),
 ];
-for(let id=0;id<players.length;id++){
-    players[id].ID = id;
+//Handling online FUCKING MULTIPLYER BIATCHES
+var channel = new DataChannel();
+var isOn = false;
+var user2id = {};
+channel.onopen = ()=>{
+        console.log("Channel established.");
+    isOn = true;
+    channel.onmessage = (msg,user)=>{
+        switch(msg.type){
+            case "newPlayer": // msg = {type,p}
+                user2id[user] = user2id[user]||[];
+                user2id[user].push(msg.p.id);
+                players.push(newPlayer(undefined,msg.p,true));
+                break;
+            case "input": // msg = {type,id,input}
+                let len = players.length;
+                for(let i=0;i<len;i++){
+                    let p = players[i];
+                    if(p.id == msg.id){
+                        p.input = msg.input;
+                        break;
+                    }
+                }
+                break;
+        }
+    };
+    channel.onleave = (user)=>{
+            console.log(user + " left.");
+        let len = players.length;
+        let ids = user2id[user];
+        for(let i=0;i<len;i++){
+            if(ids.includes(players[i].id)) players.splice(i,1);
+        }
+    };
+    setTimeout(()=>{
+        let len=players.length;
+        for(let i=0;i<len;i++){
+            if(!players[i].online){
+                channel.send({type:"newPlayer",p:players[i]});
+            }
+        }
+    },300);
+};
+let room = window.prompt("Room name?")||"default";
+if(window.confirm("OK to serve, Cancel to join.")){
+    channel.open(room);
+}else{
+    channel.connect(room);
 }
 //Setting up the control-schemes and gameplay
 var clamp = function(num,min,max){
@@ -167,22 +206,36 @@ function inRange(num,min,max){
     return (num >= min)&&(num <= max);
 }
 var sqrt1_2 = Math.SQRT1_2;
-function control(p){
+function controlPlayer(p,id){
     let oldX = p.x;
     let oldY = p.y;
     p.touching = [];
     for(let i=0;i<players.length;i++){
-        if(p.ID==i)continue;
+        if(id==i)continue;
         let pT = players[i];
-        if(p.ID>i){ // If pT's coords were already done this frame, undo them for this calculation
+        if(id>i){ // If pT's coords were already done this frame, undo them for this calculation
             p.touching[i] = inRange(p.x-(pT.x-pT.dX),-16,16) && inRange(p.y-(pT.y-pT.dY),-16,16);
         }else{
             p.touching[i] = inRange(p.x- pT.x       ,-16,16) && inRange(p.y- pT.y       ,-16,16);
         }
     }
-    var dX = keyDown(p.right)-keyDown(p.left);
-    var dY = keyDown(p.down) -keyDown(p.up);
-    var spec = keyDown(p.special);
+    let dX,dY,spec;
+    let inp = p.input;
+    if(p.online){
+        dX = inp.dX;
+        dY = inp.dY;
+        spec = inp.spec;
+    }else{
+        let oldDX = inp.dX;
+        let oldDY = inp.dY;
+        let oldSpec = inp.spec;
+        dX = inp.dX = isKeyDown(p.right)-isKeyDown(p.left);
+        dY = inp.dY = isKeyDown(p.down) -isKeyDown(p.up);
+        spec = inp.spec = isKeyDown(p.special);
+        if((isOn) && (oldDX != dX || oldDY != dY || oldSpec != spec)){
+            channel.send({type:"input",id:p.id,input:inp});
+        }
+    }
     switch(p.color){
         case "red":
         default:
@@ -190,20 +243,11 @@ function control(p){
             p.dY = dY*(spec ? 2 : 4);
             break;
         case "orange":
-            switch(p.variant){
-                case 0: //Meme controls
-                default:
-                    p.dX += dX*0.2;
-                    p.dY += dY*0.2;
-                    break;
-                case 1: //Actual fucking controls
-                    p.dX = (p.dX*15 + dX*6)/16; //Dunno why I thought of doing it like this, but it controls surprisingly well. Too well...
-                    p.dY = (p.dY*15 + dY*6)/16;
-                    break;
-            }
+            p.dX += dX*0.2;
+            p.dY += dY*0.2;
             break;
-        case "yellow":
-            p.dX = dX*4; //Implementing parriage is gonna be fuuuuuuuuuuuuuuuuucking awful.
+        case "yellow": //Implementing parriage is gonna be fuuuuuuuuuuuuuuuuucking awful.
+            p.dX = dX*4;
             p.dY = dY*4;
             p.cool--;
             if(spec && p.cool<=-50){ //30 FPS, (50+10)/30 = 2 sec cooldown
@@ -232,7 +276,7 @@ function control(p){
             let carryID = -1;
             let carryY = 1000;
             for(let i=0;i<players.length;i++){ //We find the highest possible carrier that isn't too high that you can't stand on it
-                if(i == p.ID || !p.touching[i]) continue;
+                if(i == id || !p.touching[i]) continue;
                 let pT = players[i];
                 if(pT.y < carryY && p.y < pT.y-7 && (p.carryID==-1 || pT.y < players[p.carryID].y)){
                     carryY = pT.y;
@@ -285,14 +329,11 @@ function control(p){
                     p.ground = false;
                 }
             }
-            if(p.carryID > p.ID){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
+            if(p.carryID > id){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
                 players.push(p); //Put it at the end
-                players.splice(p.ID,1); //Remove it from where it was
-                players[p.ID].done = false; //Fixes player skipping
+                players.splice(id,1); //Remove it from where it was
+                players[id].done = false; //Fixes player skipping
                 p.carryID--;
-                for(let i=p.ID;i<players.length;i++){ //Reassign all the IDs
-                    players[i].ID = i;
-                }
                 p.done = true; //Don't re-update the same soul
             }
             break;
@@ -315,12 +356,11 @@ function control(p){
     if(p.y == oldY) p.dY = 0;
 }
 //And now we ROLL.
-var cunnie = new MonoFont();
-var wonder = new WidthFont();
 let round = Math.round;
 let ceil = Math.ceil;
 let pi2 = Math.PI*2;
-var lastTime = performance.now(); /*global performance*/
+var cunnie = new MonoFont();
+var wonder = new WidthFont();
 var tick=0;
 var curBattleFrame = ()=>{};
 
@@ -328,16 +368,16 @@ ctx0 .fillStyle = "rgb(0,0,0)";
 ctx0 .fillRect(0,0,800,600);
 ctxH0.fillStyle = "rgb(0,0,0)";
 ctxH0.fillRect(0,0,480,360);
-ctxH1.textBaseline = "top"; //I like printing text with a top-right corner, thank you very much
-for(let id=0;id<players.length;id++){
-    let p = players[id];
+ctxH1.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
+for(let i=0;i<players.length;i++){
+    let p = players[i];
     ctxH1.fillStyle = p.css;
-    ctxH1.fillRect(0,id*30,480,30);
-    cunnie.fillText(ctxH1,p.color,10,id*30+5,3);
-    wonder.fillText(ctxH1,"HP",132,id*30+10,1);
+    ctxH1.fillRect(0,i*30,480,30);
+    cunnie.fillText(ctxH1,p.color,10,i*30+5,3);
+    wonder.fillText(ctxH1,"HP",132,i*30+10,1);
     ctxH1.fillStyle = "rgb(0,0,0)";
-    ctxH1.fillRect(160,id*30+5,ceil(p.maxHP*1.2),21);
-    cunnie.fillText(ctxH1,"  /"+p.maxHP,225,id*30+5,3);
+    ctxH1.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
+    cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
 }
 function firstBattleF(){
     var bone = new Bone();
@@ -351,18 +391,18 @@ function firstBattleF(){
 curBattleFrame = firstBattleF;
 function doBattleFrame(time){ //Okay, *NOW* we roll
     tick++;
-    for(let id=0;id<players.length;id++){
-        let p=players[id];
+    for(let i=0;i<players.length;i++){
+        let p=players[i];
         while(!p.done){
             p.done = true;
-            control(p);
+            controlPlayer(p,i);
         }
         p.done = false;
     }
     ctx1.clearRect(0,0,800,600);
-    for(let id=0;id<players.length;id++){
-        let p = players[id];
-        drawImgBlend(ctx1,p.sprite,round(p.x),round(p.y),id+1);
+    for(let i=0;i<players.length;i++){
+        let p = players[i];
+        drawImgBlend(ctx1,p.sprite,round(p.x),round(p.y),i+1);
         if(p.color == "yellow" && p.cool>0){
             ctx1.strokeStyle = "rgb(255,255,0)";
             ctx1.beginPath();
@@ -371,11 +411,11 @@ function doBattleFrame(time){ //Okay, *NOW* we roll
         }
     }
     curBattleFrame(time);
-    for(let id=0;id<players.length;id++){
-        let hp = players[id].hp;
+    for(let i=0;i<players.length;i++){
+        let hp = players[i].hp;
         ctxH1.fillStyle = "rgb(255,255,255)";
-        ctxH1.fillRect(160,id*30+5,ceil(hp*1.2),21);
-        cunnie.fillText(ctxH1,hp,225,id*30+5,3);
+        ctxH1.fillRect(160,i*30+5,ceil(hp*1.2),21);
+        cunnie.fillText(ctxH1,hp,220,i*30+5,3);
     }
     window.requestAnimationFrame(doBattleFrame);
 }

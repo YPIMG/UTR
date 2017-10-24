@@ -135,37 +135,11 @@ let defW = [];
 for(let i=0;i<94;i++){
     defW[i] = 11;
 }
-defW[ 1] = 5;
-defW[ 7] = 5;
-defW[12] = 5;
-defW[14] = 5;
-defW[26] = 5;
-defW[27] = 5;
-defW[41] = 5;
-defW[65] = 5;
-defW[73] = 5;
-defW[92] = 5;
-defW[17] = 6;
-defW[28] = 6;
-defW[30] = 6;
-defW[ 8] = 7;
-defW[ 9] = 7;
-defW[29] = 7;
-defW[60] = 7;
-defW[62] = 7;
-defW[63] = 7;
-defW[64] = 7;
-defW[91] = 7;
-defW[93] = 7;
-defW[11] = 9;
-defW[13] = 9;
-defW[15] = 9;
-defW[61] = 9;
-defW[94] = 9;
-defW[45] =17;
-defW[55] =17;
-defW[77] =17;
-defW[87] =17;
+defW[ 1]=defW[ 7]=defW[12]=defW[14]=defW[26]=defW[27] = defW[41] = defW[65] = defW[73] = defW[92] = 5;
+defW[17]=defW[28]=defW[30]=6;
+defW[ 8]=defW[ 9]=defW[29]=defW[60]=defW[62]=defW[63] = defW[64] = defW[91] = defW[93] = 7;
+defW[11]=defW[13]=defW[15]=defW[61]=defW[94]=9;
+defW[45]=defW[55]=defW[77]=defW[87]=17;
 var WidthFont = class{
     constructor(sheet=sprites.wonder,cWs=defW,space=1){
         this.sheet = sheet;

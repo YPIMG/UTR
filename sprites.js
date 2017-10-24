@@ -100,11 +100,12 @@ var Bone = class{
 };
 
 var MonoFont = class{
-    constructor(sheet=sprites.cunnilingus,cW=5,space=1){
+    constructor(sheet=sprites.cunnilingus,cW=5,space=1,spacing=-1){
         this.sheet = sheet;
         this.cW = Math.round(cW);
         this.off = Math.round(cW+space);
         this.cH = this.sheet.height;
+        this.spacing = spacing;
     }
     fillText(ctx,text,x,y,scale=1){
         text = text.toString();
@@ -127,21 +128,21 @@ var MonoFont = class{
         for(let i=0;i<len;i++){
             let c = text.charCodeAt(i)-32;
             if((c < 0)||(c > 94)) c = 0;
-            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*this.off*scale,y,this.cW*scale,this.cH*scale);
+            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*(this.off+this.spacing)*scale,y,this.cW*scale,this.cH*scale);
         }
     }
 };
 let defW = [];
 for(let i=0;i<94;i++){
-    defW[i] = 11;
+    defW[i] = 10;
 }
-defW[ 1]=defW[ 7]=defW[12]=defW[14]=defW[26]=defW[27] = defW[41] = defW[65] = defW[73] = defW[92] = 5;
-defW[17]=defW[28]=defW[30]=6;
-defW[ 8]=defW[ 9]=defW[29]=defW[60]=defW[62]=defW[63] = defW[64] = defW[91] = defW[93] = 7;
-defW[11]=defW[13]=defW[15]=defW[61]=defW[94]=9;
-defW[45]=defW[55]=defW[77]=defW[87]=17;
+defW[ 1] = defW[ 7] = defW[12] = defW[14] = defW[26] = defW[27] = defW[41] = defW[65] = defW[73] = defW[92] = 4;
+defW[17] = defW[28] = defW[30] = 5;
+defW[ 8] = defW[ 9] = defW[29] = defW[60] = defW[62] = defW[63] = defW[64] = defW[91] = defW[93] = 6;
+defW[11] = defW[13] = defW[15] = defW[61] = defW[94] = 8;
+defW[45] = defW[55] = defW[77] = defW[87] = 16;
 var WidthFont = class{
-    constructor(sheet=sprites.wonder,cWs=defW,space=1){
+    constructor(sheet=sprites.wonder,cWs=defW,space=2,spacing=2){
         this.sheet = sheet;
         this.offs = [0];
         let n = 0;
@@ -152,6 +153,7 @@ var WidthFont = class{
         }
         this.cWs = cWs.slice();
         this.cH = this.sheet.height;
+        this.spacing = spacing;
     }
     fillText(ctx,text,x,y,scale=1){
         text = text.toString();
@@ -176,7 +178,7 @@ var WidthFont = class{
             let c = text.charCodeAt(i)-32;
             if((c < 0)||(c > 94)) c = 0;
             ctx.drawImage(this.sheet,this.offs[c],0,this.cWs[c],this.cH,x+off,y,this.cWs[c]*scale,this.cH*scale);
-            off += this.cWs[c]*scale;
+            off += (this.cWs[c]+this.spacing)*scale;
         }
     }
 }

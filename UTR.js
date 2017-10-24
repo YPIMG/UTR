@@ -152,18 +152,26 @@ var channel = new DataChannel();
 var isOn = false;
 var user2id = {};
 channel.onopen = ()=>{
-        console.log("Channel established.");
     isOn = true;
-    channel.onmessage = (msg,user)=>{
+    channel.onmessage = function(msg,user){
+        let len;
         switch(msg.type){
-            case "newPlayer": // msg = {type,p}
-                user2id[user] = user2id[user]||[];
-                user2id[user].push(msg.p.id);
-                players.push(newPlayer(undefined,msg.p,true));
+            case "sendPlayers": // msg = {type}
+                console.log("Sending players to "+user);
+                channel.send({type:"newPlayers",ps:players});
+                break;
+            case "newPlayers": // msg = {type,ps}
+                console.log("Got players from "+user+": "+msg.ps);
+                len = msg.ps.length;
+                user2id[user] = [];
+                for(let i=0;i<len;i++){
+                    user2id[user].push(msg.ps[i].id);
+                    players.push(newPlayer(undefined,msg.ps[i],true));
+                }
                 initHUD();
                 break;
             case "input": // msg = {type,id,input}
-                let len = players.length;
+                len = players.length;
                 for(let i=0;i<len;i++){
                     let p = players[i];
                     if(p.id == msg.id){
@@ -174,8 +182,8 @@ channel.onopen = ()=>{
                 break;
         }
     };
-    channel.onleave = (user)=>{
-            console.log(user + " left.");
+    channel.onleave = function(user){
+        console.log(user+" left.");
         let len = players.length;
         let ids = user2id[user];
         for(let i=0;i<len;i++){
@@ -184,16 +192,11 @@ channel.onopen = ()=>{
         initHUD();
     };
     setTimeout(()=>{
-        let len=players.length;
-        for(let i=0;i<len;i++){
-            if(!players[i].online){
-                channel.send({type:"newPlayer",p:players[i]});
-            }
-        }
+        channel.send({type:"sendPlayers"});
     },300);
 };
-let room = window.prompt("Room name?")||"default";
-if(window.confirm("OK to serve, Cancel to join.")){
+let room = window.prompt("If you're playing online, type a room name.");
+if(room && window.confirm("If you're the first in the room, hit OK.")){
     channel.open(room);
 }else{
     channel.connect(room);
@@ -365,23 +368,24 @@ var cunnie = new MonoFont();
 var wonder = new WidthFont();
 var tick=0;
 var curBattleFrame = ()=>{};
+ctx0.fillStyle = "rgb(0,0,0)";
+ctx0.fillRect(0,0,800,600);
 function initHUD(){
-    ctx0 .fillStyle = "rgb(0,0,0)";
-    ctx0 .fillRect(0,0,800,600);
     ctxH0.fillStyle = "rgb(0,0,0)";
     ctxH0.fillRect(0,0,480,360);
     ctxH1.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
     for(let i=0;i<players.length;i++){
         let p = players[i];
-        ctxH1.fillStyle = p.css;
-        ctxH1.fillRect(0,i*30,480,30);
+        ctxH0.fillStyle = p.css;
+        ctxH0.fillRect(0,i*30,480,30);
         cunnie.fillText(ctxH1,p.color,10,i*30+5,3);
         wonder.fillText(ctxH1,"HP",132,i*30+10,1);
-        ctxH1.fillStyle = "rgb(0,0,0)";
-        ctxH1.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
+        ctxH0.fillStyle = "rgb(0,0,0)";
+        ctxH0.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
         cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
     }
 }
+initHUD();
 function firstBattleF(){
     var bone = new Bone();
     curBattleFrame = ()=>{

@@ -160,6 +160,7 @@ channel.onopen = ()=>{
                 user2id[user] = user2id[user]||[];
                 user2id[user].push(msg.p.id);
                 players.push(newPlayer(undefined,msg.p,true));
+                initHUD();
                 break;
             case "input": // msg = {type,id,input}
                 let len = players.length;
@@ -180,6 +181,7 @@ channel.onopen = ()=>{
         for(let i=0;i<len;i++){
             if(ids.includes(players[i].id)) players.splice(i,1);
         }
+        initHUD();
     };
     setTimeout(()=>{
         let len=players.length;
@@ -363,21 +365,22 @@ var cunnie = new MonoFont();
 var wonder = new WidthFont();
 var tick=0;
 var curBattleFrame = ()=>{};
-
-ctx0 .fillStyle = "rgb(0,0,0)";
-ctx0 .fillRect(0,0,800,600);
-ctxH0.fillStyle = "rgb(0,0,0)";
-ctxH0.fillRect(0,0,480,360);
-ctxH1.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
-for(let i=0;i<players.length;i++){
-    let p = players[i];
-    ctxH1.fillStyle = p.css;
-    ctxH1.fillRect(0,i*30,480,30);
-    cunnie.fillText(ctxH1,p.color,10,i*30+5,3);
-    wonder.fillText(ctxH1,"HP",132,i*30+10,1);
-    ctxH1.fillStyle = "rgb(0,0,0)";
-    ctxH1.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
-    cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
+function initHUD(){
+    ctx0 .fillStyle = "rgb(0,0,0)";
+    ctx0 .fillRect(0,0,800,600);
+    ctxH0.fillStyle = "rgb(0,0,0)";
+    ctxH0.fillRect(0,0,480,360);
+    ctxH1.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
+    for(let i=0;i<players.length;i++){
+        let p = players[i];
+        ctxH1.fillStyle = p.css;
+        ctxH1.fillRect(0,i*30,480,30);
+        cunnie.fillText(ctxH1,p.color,10,i*30+5,3);
+        wonder.fillText(ctxH1,"HP",132,i*30+10,1);
+        ctxH1.fillStyle = "rgb(0,0,0)";
+        ctxH1.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
+        cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
+    }
 }
 function firstBattleF(){
     var bone = new Bone();

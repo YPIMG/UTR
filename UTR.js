@@ -31,26 +31,34 @@ window.onblur=function(){
     prKeys=[];
 };
 var keyConv = {
-    enter:"Enter",
-    shift:"Shift",
-    space:" ",
     control:"Control",
     ctrl:"Control",
+    alt:"Alt",
     left:"ArrowLeft",
     up:"ArrowUp",
     right:"ArrowRight",
-    down:"ArrowDown"
+    down:"ArrowDown",
+    enter:"Enter",
+    shift:"Shift",
+    escape:"Escape",
+    esc:"Escape",
+    backspace:"Backspace",
+    delete:"Delete",
+    del:"Delete",
+    space:" ",
+    spacebar:" ",
 };
 function isKeyDown(k){
-    let l = k.split(',');
+    let l = k.split(",");
     if(k.charAt(0) == ","){
-        l[1] = l[0];
+        l[1] = l[2];
         l[0] = ",";
     }
     let key = keyConv[l[0].toLowerCase()] || l[0].toLowerCase();
     if(l[1]) key = key + "," + l[1];
     return prKeys[key]||false;
 }
+//Using mouse events for another control scheme on canvas1
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
     red:"rgb(255,0,0)",
@@ -61,54 +69,33 @@ var colors = { //The pallets of the standard 7 colors; keep in mind the default 
     indigo:"rgb(0,60,255)",
     violet:"rgb(213,53,217)"
 };
-function newPlayer(color,p={},online=false){
-    let newP;
-    if(online){
-        newP = {
-            color:color||p.color||"red",id:p.id,
-            x:p.x||0,y:p.y||0,
-            maxHP:p.maxHP,
-            maxInv:p.maxInv,
-            hp:p.hp||p.maxHP,
-            inv:p.inv||p.maxInv,
-            online:true,input:{
-                dX:0,dY:0,spec:false
-            }
-        };
-        let c = colors[newP.color];
-        if(c){
-            newP.css = c;
-            newP.sprite = imgShadow(sprites.heart,c);
-        }else{
-            newP.css = "rgb(255,66,66)";
-            newP.sprite = sprites.defHeart;
-        }
-        return newP;
-    }
-    p.id = p.id||(""+Date.now()+Math.floor(Math.random()*100000));
-    newP = {
-        color:color||p.color||"red",id:p.id,
-        left:p.left||"left",
-        up:p.up||"up",
-        right:p.right||"right",
-        down:p.down||"down",
-        special:p.special||"shift",
+function newPlayer(p={},online=false){
+    let newP = {
+        color:p.color||"red",id:p.id||(""+Date.now()+Math.floor(Math.random()*1000)),
+        css:"rgb(255,66,66)",sprite:sprites.defHeart,
+        mouse:(p.mouse && !online),
         dX:p.dX||0,dY:p.dY||0,
         x:p.x||0,y:p.y||0,
-        online:false,input:{
+        maxHP:p.maxHP||20,
+        maxInv:p.maxInv||20,
+        online:online,input:{
             dX:0,dY:0,spec:false
         },
         touching:[]
     };
-    let c = colors[newP.color];
+    if(!online){
+        newP.left = p.left||"left";
+        newP.up = p.up||"up";
+        newP.right = p.right||"right";
+        newP.down = p.down||"down";
+        newP.special = p.special||"shift";
+    }
+    let c = colors[p.color||"red"];
     if(c){
         newP.css = c;
         newP.sprite = imgShadow(sprites.heart,c);
-    }else{
-        newP.css = "rgb(255,66,66)";
-        newP.sprite = sprites.defHeart; //Default heart
     }
-    switch(color){
+    switch(newP.color){
         case "yellow":
             newP.cool = -1000; //Cooldown is set to -1000 so the ability is ready immediately
             newP.maxInv = 10; //Balancing for parry move
@@ -131,15 +118,13 @@ function newPlayer(color,p={},online=false){
             newP.maxInv = 35; //Base stat is 20, add 15 for items in the real game (I'll balance later)
             break;
     }
-    newP.maxHP = p.maxHP||20,
-    newP.maxInv = p.maxInv||20,
     newP.hp = newP.maxHP;
     newP.inv= newP.maxInv;
-    newP.online = false;
     return newP;
 }
 var players=[
-    newPlayer(window.prompt("What colour do you wanna be?")||"red",{
+    newPlayer({
+        color:window.prompt("What colour do you wanna be?"),
         left:"A",
         up:"W",
         right:"D",
@@ -151,6 +136,7 @@ var players=[
 var channel = new DataChannel();
 var isOn = false;
 var user2id = {};
+var id2index = {};
 channel.onopen = ()=>{
     isOn = true;
     channel.onmessage = function(msg,user){
@@ -161,12 +147,14 @@ channel.onopen = ()=>{
                 channel.send({type:"newPlayers",ps:players});
                 break;
             case "newPlayers": // msg = {type,ps}
-                console.log("Got players from "+user+": "+msg.ps);
-                len = msg.ps.length;
+                let ps = msg.ps;
+                console.log("Got players from "+user+": "+ps);
+                len = ps.length;
                 user2id[user] = [];
                 for(let i=0;i<len;i++){
-                    user2id[user].push(msg.ps[i].id);
-                    players.push(newPlayer(undefined,msg.ps[i],true));
+                    user2id[user].push(ps[i].id);
+                    players.push(newPlayer(ps[i],true));
+                    id2index[ps[i].id] = players.length;
                 }
                 initHUD();
                 break;
@@ -204,11 +192,14 @@ if(room && window.confirm("If you're the first in the room, hit OK.")){
 //Setting up the control-schemes and gameplay
 var clamp = function(num,min,max){
     if(num < min) return min;
-    if(max < num) return max;
+    if(num > max) return max;
     return num;
 };
 function inRange(num,min,max){
     return (num >= min)&&(num <= max);
+}
+function inRangeEx(num,min,max){
+    return (num > min)&&(num < max);
 }
 var sqrt1_2 = Math.SQRT1_2;
 function controlPlayer(p,id){
@@ -226,7 +217,7 @@ function controlPlayer(p,id){
     }
     let dX,dY,spec;
     let inp = p.input;
-    if(p.online){
+    if(p.online || p.mouse){
         dX = inp.dX;
         dY = inp.dY;
         spec = inp.spec;
@@ -250,6 +241,11 @@ function controlPlayer(p,id){
         case "orange":
             p.dX += dX*0.2;
             p.dY += dY*0.2;
+            if(!inRangeEx(p.x,0,784)){
+                p.dX *= -0.95;
+            }if(!inRangeEx(p.y,0,584)){
+                p.dY *= -0.95;
+            }
             break;
         case "yellow": //Implementing parriage is gonna be fuuuuuuuuuuuuuuuuucking awful.
             p.dX = dX*4;
@@ -370,25 +366,28 @@ var tick=0;
 var curBattleFrame = ()=>{};
 ctx0.fillStyle = "rgb(0,0,0)";
 ctx0.fillRect(0,0,800,600);
+ctxH1.textBaseline = ctxH0.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
 function initHUD(){
     ctxH0.fillStyle = "rgb(0,0,0)";
     ctxH0.fillRect(0,0,480,360);
-    ctxH1.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
     for(let i=0;i<players.length;i++){
         let p = players[i];
         ctxH0.fillStyle = p.css;
         ctxH0.fillRect(0,i*30,480,30);
-        cunnie.fillText(ctxH1,p.color,10,i*30+5,3);
-        wonder.fillText(ctxH1,"HP",132,i*30+10,1);
+        cunnie.fillText(ctxH0,p.color,10,i*30+5,3);
+        wonder.fillText(ctxH0,"HP",132,i*30+10,1);
         ctxH0.fillStyle = "rgb(0,0,0)";
         ctxH0.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
         cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
+            ctxH1.fillStyle = "rgb(255,255,255)";
+            ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
+            cunnie.fillText(ctxH1,p.hp,220,i*30+5,3);
     }
 }
 initHUD();
 function firstBattleF(){
     var bone = new Bone();
-    curBattleFrame = ()=>{
+    curBattleFrame = (time)=>{
         for(let i=0;i<60;i++){
             bone.setCSS(`hsl(${((i+tick)*4)%360},100%,50%)`);
             bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
@@ -398,8 +397,11 @@ function firstBattleF(){
 curBattleFrame = firstBattleF;
 function doBattleFrame(time){ //Okay, *NOW* we roll
     tick++;
-    for(let i=0;i<players.length;i++){
+    let oldHP = [];
+    let plen = players.length
+    for(let i=0;i<plen;i++){
         let p=players[i];
+        oldHP.push(p.hp);
         while(!p.done){
             p.done = true;
             controlPlayer(p,i);
@@ -407,7 +409,7 @@ function doBattleFrame(time){ //Okay, *NOW* we roll
         p.done = false;
     }
     ctx1.clearRect(0,0,800,600);
-    for(let i=0;i<players.length;i++){
+    for(let i=0;i<plen;i++){
         let p = players[i];
         drawImgBlend(ctx1,p.sprite,round(p.x),round(p.y),i+1);
         if(p.color == "yellow" && p.cool>0){
@@ -418,11 +420,13 @@ function doBattleFrame(time){ //Okay, *NOW* we roll
         }
     }
     curBattleFrame(time);
-    for(let i=0;i<players.length;i++){
+    for(let i=0;i<plen;i++){
         let hp = players[i].hp;
-        ctxH1.fillStyle = "rgb(255,255,255)";
-        ctxH1.fillRect(160,i*30+5,ceil(hp*1.2),21);
-        cunnie.fillText(ctxH1,hp,220,i*30+5,3);
+        if(oldHP[i] != hp){
+            ctxH1.fillStyle = "rgb(255,255,255)";
+            ctxH1.fillRect(160,i*30+5,ceil(hp*1.2),21);
+            cunnie.fillText(ctxH1,hp,220,i*30+5,3);
+        }
     }
     window.requestAnimationFrame(doBattleFrame);
 }

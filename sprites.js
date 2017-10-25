@@ -68,6 +68,7 @@ let clamp = function(num,min,max){
     if(num > max) return max;
     return num;
 };
+
 var Bone = class{
     constructor(sheet=sprites.bonely,sprW=10,rodW=6,cssColor="rgb(255,255,255)",key="bonely"){
         this._sheet = sheet;
@@ -83,13 +84,13 @@ var Bone = class{
         let oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){
-            ctx.drawImage(this.sheet,0     ,0     ,this.h,this.w,x         ,y,this.h,this.w);
+            ctx.drawImage(this.sheet,     0,     0,this.h,this.w,x         ,y,this.h,this.w);
             ctx.drawImage(this.sheet,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
-            ctx.fillRect(x+this.h,y+this.rodOff,l-this.h-this.h,this.w-this.rodOff*2);
+            ctx.fillRect(x+this.h,y+this.rodOff,l-this.h*2,this.w-this.rodOff*2);
         }else{
             ctx.drawImage(this.sheet,this.h,0,this.w,this.h,x,y         ,this.w,this.h);
             ctx.drawImage(this.sheet,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
-            ctx.fillRect(x+this.rodOff,y+this.h,this.w-this.rodOff*2,l-this.h-this.h);
+            ctx.fillRect(x+this.rodOff,y+this.h,this.w-this.rodOff*2,l-this.h*2);
         }
         ctx.fillStyle = oldFill;
     }

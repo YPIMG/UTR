@@ -244,8 +244,8 @@ function controlPlayer(p,index){
             p.dY = dY*(spec ? 2 : 4);
             break;
         case "orange":
-            p.dX = p._dX;
-            p.dY = p._dY;
+            p.dX += dX*0.2;
+            p.dY += dY*0.2;
             if(!inRangeEx(p.x+p.dX,0,784)){
                 p.dX *= -0.95;
             }if(!inRangeEx(p.y+p.dY,0,584)){

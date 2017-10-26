@@ -59,6 +59,7 @@ function isKeyDown(k){
     return prKeys[key]||false;
 }
 //Using mouse events for another control scheme on canvas1
+
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
     red:"rgb(255,0,0)",
@@ -137,6 +138,13 @@ var channel = new DataChannel();
 var isOn = false;
 var user2id = {};
 var id2index = {};
+function updateId2index(){
+    id2index = {};
+    let len = players.length;
+    for(let i=0;i<len;i++){
+        id2index[players[i].id] = i;
+    }
+}
 channel.onopen = ()=>{
     isOn = true;
     channel.onmessage = function(msg,user){
@@ -152,31 +160,27 @@ channel.onopen = ()=>{
                 len = ps.length;
                 user2id[user] = [];
                 for(let i=0;i<len;i++){
+                    if(ps[i].online) continue;
                     user2id[user].push(ps[i].id);
                     players.push(newPlayer(ps[i],true));
-                    id2index[ps[i].id] = players.length;
                 }
+                updateId2index();
                 initHUD();
                 break;
             case "input": // msg = {type,id,input}
-                len = players.length;
-                for(let i=0;i<len;i++){
-                    let p = players[i];
-                    if(p.id == msg.id){
-                        p.input = msg.input;
-                        break;
-                    }
-                }
+                players[id2index[msg.id]].input = msg.input;
                 break;
         }
     };
     channel.onleave = function(user){
         console.log(user+" left.");
-        let len = players.length;
         let ids = user2id[user];
+        let len = ids.length;
         for(let i=0;i<len;i++){
-            if(ids.includes(players[i].id)) players.splice(i,1);
+            players.splice(id2index[ids[i]],1);
         }
+        delete user2id[user];
+        updateId2index()
         initHUD();
     };
     setTimeout(()=>{
@@ -186,7 +190,7 @@ channel.onopen = ()=>{
 let room = window.prompt("If you're playing online, type a room name.");
 if(room && window.confirm("If you're the first in the room, hit OK.")){
     channel.open(room);
-}else{
+}else if(room){
     channel.connect(room);
 }
 //Setting up the control-schemes and gameplay
@@ -199,7 +203,7 @@ function inRange(num,min,max){
     return (num >= min)&&(num <= max);
 }
 function inRangeEx(num,min,max){
-    return (num > min)&&(num < max);
+    return (num > min) && (num < max);
 }
 var sqrt1_2 = Math.SQRT1_2;
 function controlPlayer(p,id){
@@ -217,7 +221,7 @@ function controlPlayer(p,id){
     }
     let dX,dY,spec;
     let inp = p.input;
-    if(p.online || p.mouse){
+    if(p.online){
         dX = inp.dX;
         dY = inp.dY;
         spec = inp.spec;
@@ -241,9 +245,9 @@ function controlPlayer(p,id){
         case "orange":
             p.dX += dX*0.2;
             p.dY += dY*0.2;
-            if(!inRangeEx(p.x,0,784)){
+            if(!inRangeEx(p.x+p.dX,0,784)){
                 p.dX *= -0.95;
-            }if(!inRangeEx(p.y,0,584)){
+            }if(!inRangeEx(p.y+p.dY,0,584)){
                 p.dY *= -0.95;
             }
             break;

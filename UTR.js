@@ -161,8 +161,8 @@ channel.onopen = ()=>{
                 user2id[user] = [];
                 for(let i=0;i<len;i++){
                     let p = ps[i];
-                    if(!p.user) p.user = user;
-                    if(p.user !== user) continue;
+                    if(p.user) continue;
+                    p.user = user;
                     user2id[user].push(p.id);
                     players.push(newPlayer(p));
                 }
@@ -232,7 +232,7 @@ function controlPlayer(p,index){
         dY = inp.dY = isKeyDown(p.down) -isKeyDown(p.up);
         spec = inp.spec = isKeyDown(p.special);
         if(tick%15 == 0){
-            channel.send({type:"input",id:p.id,input:inp,x:p.x,y:p.y,dX:p.dX,dY:p.dY});
+            channel.send({type:"input",id:p.id,input:inp,sync:true,x:p.x,y:p.y,dX:p.dX,dY:p.dY});
         }else if((isOn) && (oldDX != dX || oldDY != dY || oldSpec != spec)){
             channel.send({type:"input",id:p.id,input:inp});
         }

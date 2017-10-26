@@ -130,7 +130,7 @@ var players=[
         up:"W",
         right:"D",
         down:"S",
-        special:"shift,1"
+        special:"space"
     }),
 ];
 //Handling online FUCKING MULTIPLYER BIATCHES

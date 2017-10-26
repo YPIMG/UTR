@@ -70,21 +70,21 @@ var colors = { //The pallets of the standard 7 colors; keep in mind the default 
     indigo:"rgb(0,60,255)",
     violet:"rgb(213,53,217)"
 };
-function newPlayer(p={},online=false){
+function newPlayer(p={}){
     let newP = {
         color:p.color||"red",id:p.id||(""+Date.now()+Math.floor(Math.random()*1000)),
         css:"rgb(255,66,66)",sprite:sprites.defHeart,
-        mouse:(p.mouse && !online),
+        mouse:p.mouse||false,
         dX:p.dX||0,dY:p.dY||0,
         x:p.x||0,y:p.y||0,
         maxHP:p.maxHP||20,
         maxInv:p.maxInv||20,
-        online:online,input:{
+        user:p.user,input:{
             dX:0,dY:0,spec:false
         },
         touching:[]
     };
-    if(!online){
+    if(!p.user){
         newP.left = p.left||"left";
         newP.up = p.up||"up";
         newP.right = p.right||"right";
@@ -160,15 +160,24 @@ channel.onopen = ()=>{
                 len = ps.length;
                 user2id[user] = [];
                 for(let i=0;i<len;i++){
-                    if(ps[i].online) continue;
-                    user2id[user].push(ps[i].id);
-                    players.push(newPlayer(ps[i],true));
+                    let p = ps[i];
+                    if(!p.user) p.user = user;
+                    if(p.user !== user) continue;
+                    user2id[user].push(p.id);
+                    players.push(newPlayer(p));
                 }
                 updateId2index();
                 initHUD();
                 break;
-            case "input": // msg = {type,id,input}
-                players[id2index[msg.id]].input = msg.input;
+            case "input": // msg = {type,id,input,sync,x,y,dX,dY}
+                let p = players[id2index[msg.id]];
+                p.input = msg.input;
+                if(msg.sync){
+                    p.x  = msg.x;
+                    p.y  = msg.y;
+                    p.dX = msg.dX;
+                    p.dY = msg.dY;
+                }
                 break;
         }
     };
@@ -206,22 +215,12 @@ function inRangeEx(num,min,max){
     return (num > min) && (num < max);
 }
 var sqrt1_2 = Math.SQRT1_2;
-function controlPlayer(p,id){
+function controlPlayer(p,index){
     let oldX = p.x;
     let oldY = p.y;
-    p.touching = [];
-    for(let i=0;i<players.length;i++){
-        if(id==i)continue;
-        let pT = players[i];
-        if(id>i){ // If pT's coords were already done this frame, undo them for this calculation
-            p.touching[i] = inRange(p.x-(pT.x-pT.dX),-16,16) && inRange(p.y-(pT.y-pT.dY),-16,16);
-        }else{
-            p.touching[i] = inRange(p.x- pT.x       ,-16,16) && inRange(p.y- pT.y       ,-16,16);
-        }
-    }
     let dX,dY,spec;
     let inp = p.input;
-    if(p.online){
+    if(p.user){
         dX = inp.dX;
         dY = inp.dY;
         spec = inp.spec;
@@ -232,7 +231,9 @@ function controlPlayer(p,id){
         dX = inp.dX = isKeyDown(p.right)-isKeyDown(p.left);
         dY = inp.dY = isKeyDown(p.down) -isKeyDown(p.up);
         spec = inp.spec = isKeyDown(p.special);
-        if((isOn) && (oldDX != dX || oldDY != dY || oldSpec != spec)){
+        if(tick%15 == 0){
+            channel.send({type:"input",id:p.id,input:inp,x:p.x,y:p.y,dX:p.dX,dY:p.dY});
+        }else if((isOn) && (oldDX != dX || oldDY != dY || oldSpec != spec)){
             channel.send({type:"input",id:p.id,input:inp});
         }
     }
@@ -243,8 +244,8 @@ function controlPlayer(p,id){
             p.dY = dY*(spec ? 2 : 4);
             break;
         case "orange":
-            p.dX += dX*0.2;
-            p.dY += dY*0.2;
+            p.dX = p._dX;
+            p.dY = p._dY;
             if(!inRangeEx(p.x+p.dX,0,784)){
                 p.dX *= -0.95;
             }if(!inRangeEx(p.y+p.dY,0,584)){
@@ -259,9 +260,9 @@ function controlPlayer(p,id){
                 p.cool = 10;
             }
             break;
-        case "green":
-            p.dX = dX*4; //Green is not a creative color.
-            p.dY = dY*4; //I'll do it later
+        case "green": //Green is not a creative color.
+            p.dX = dX*4;
+            p.dY = dY*4;
             
             break;
         case "blue":
@@ -281,7 +282,7 @@ function controlPlayer(p,id){
             let carryID = -1;
             let carryY = 1000;
             for(let i=0;i<players.length;i++){ //We find the highest possible carrier that isn't too high that you can't stand on it
-                if(i == id || !p.touching[i]) continue;
+                if(i == index || !p.touching[i]) continue;
                 let pT = players[i];
                 if(pT.y < carryY && p.y < pT.y-7 && (p.carryID==-1 || pT.y < players[p.carryID].y)){
                     carryY = pT.y;
@@ -293,7 +294,7 @@ function controlPlayer(p,id){
             if(p.carryID != oldCarry){
                 p.carryX = p.x-players[p.carryID].x;
             }
-            if(dY == 1) p.carryID = -1; //Holding down lets you cancel being carried, guaranteed
+            if(spec || (dY == 1)) p.carryID = -1; //Cancel being carried by holding special or down, guaranteed
             p.ground = p.y == 584 || p.carryID > -1;
             if(dY != -1 && p.dY < -2 ){
                 p.dY = -2;
@@ -334,10 +335,10 @@ function controlPlayer(p,id){
                     p.ground = false;
                 }
             }
-            if(p.carryID > id){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
+            if(p.carryID > index){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
                 players.push(p); //Put it at the end
-                players.splice(id,1); //Remove it from where it was
-                players[id].done = false; //Fixes player skipping
+                players.splice(index,1); //Remove it from where it was
+                players[index].done = false; //Fixes player skipping
                 p.carryID--;
                 p.done = true; //Don't re-update the same soul
             }
@@ -367,6 +368,7 @@ let pi2 = Math.PI*2;
 var cunnie = new MonoFont();
 var wonder = new WidthFont();
 var tick=0;
+var syncTick = 0;
 var curBattleFrame = ()=>{};
 ctx0.fillStyle = "rgb(0,0,0)";
 ctx0.fillRect(0,0,800,600);
@@ -382,10 +384,11 @@ function initHUD(){
         wonder.fillText(ctxH0,"HP",132,i*30+10,1);
         ctxH0.fillStyle = "rgb(0,0,0)";
         ctxH0.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
-        cunnie.fillText(ctxH1,"  /"+p.maxHP,220,i*30+5,3);
-            ctxH1.fillStyle = "rgb(255,255,255)";
-            ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
-            cunnie.fillText(ctxH1,p.hp,220,i*30+5,3);
+        cunnie.fillText(ctxH0,"  /"+p.maxHP,220,i*30+5,3);
+        ctxH1.clearRect(0,0,480,360);
+        ctxH1.fillStyle = "rgb(255,255,255)";
+        ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
+        cunnie.fillText(ctxH1,p.hp,220,i*30+5,3);
     }
 }
 initHUD();
@@ -402,7 +405,16 @@ curBattleFrame = firstBattleF;
 function doBattleFrame(time){ //Okay, *NOW* we roll
     tick++;
     let oldHP = [];
-    let plen = players.length
+    let plen = players.length;
+    for(let index=0;index<plen;index++){
+        let p = players[index];
+        p.touching.length = 0;
+        for(let i=0;i<plen;i++){
+            if(i == index) continue;
+            let pT = players[i];
+            p.touching[i] = inRange(p.x-pT.x,-16,16) && inRange(p.y-pT.y,-16,16);
+        }
+    }
     for(let i=0;i<plen;i++){
         let p=players[i];
         oldHP.push(p.hp);
@@ -425,10 +437,13 @@ function doBattleFrame(time){ //Okay, *NOW* we roll
     }
     curBattleFrame(time);
     for(let i=0;i<plen;i++){
-        let hp = players[i].hp;
-        if(oldHP[i] != hp){
+        let p = players[i];
+        if(oldHP[i] != p.hp){
+            ctxH1.clearRect(160,i*30+5,500,21);
             ctxH1.fillStyle = "rgb(255,255,255)";
-            ctxH1.fillRect(160,i*30+5,ceil(hp*1.2),21);
+            ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
+            let hp = p.hp;
+            if(hp < 10) hp = " "+hp;
             cunnie.fillText(ctxH1,hp,220,i*30+5,3);
         }
     }

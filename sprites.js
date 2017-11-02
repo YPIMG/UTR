@@ -1,12 +1,10 @@
 "use strict";
 /*global Image*/
-{
+{ //Start of scope
 
 let fakeCanvas = document.createElement('canvas');
 let ctxF = fakeCanvas.getContext('2d');
 
-//Doing it this way lets me dynamically color a sprite
-//Highlight a zero to see the sprites easily
 var newImage = function(w,h,src=""){
     let img = new Image(w,h);
     img.src = src;
@@ -21,8 +19,8 @@ var sprites = {
 };
 let shadowCache = {};
 var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
-    let store = shadowCache[key];
     if(key !== undefined){
+        var store = shadowCache[key];
         if(!store){
             shadowCache[key] = {};
             store = shadowCache[key];
@@ -84,13 +82,13 @@ var Bone = class{
         let oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){
-            ctx.drawImage(this.sheet,     0,     0,this.h,this.w,x         ,y,this.h,this.w);
-            ctx.drawImage(this.sheet,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
             ctx.fillRect(x+this.h,y+this.rodOff,l-this.h*2,this.w-this.rodOff*2);
+            ctx.drawImage(this.sheet,/*Q*/0,/*Q*/0,this.h,this.w,x/*stuff*/,y,this.h,this.w);
+            ctx.drawImage(this.sheet,this.w,this.h,this.h,this.w,x+l-this.h,y,this.h,this.w);
         }else{
-            ctx.drawImage(this.sheet,this.h,0,this.w,this.h,x,y         ,this.w,this.h);
-            ctx.drawImage(this.sheet,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
             ctx.fillRect(x+this.rodOff,y+this.h,this.w-this.rodOff*2,l-this.h*2);
+            ctx.drawImage(this.sheet,this.h,0,this.w,this.h,x,y/*stuff*/,this.w,this.h);
+            ctx.drawImage(this.sheet,0,this.w,this.w,this.h,x,y+l-this.h,this.w,this.h);
         }
         ctx.fillStyle = oldFill;
     }
@@ -109,8 +107,6 @@ var MonoFont = class{
         this.spacing = spacing;
     }
     fillText(ctx,text,x,y,scale=1){
-        text = text.toString();
-        scale = Math.round(scale);
         switch(ctx.textBaseline){
             case "top":
             case "hanging":
@@ -125,11 +121,14 @@ var MonoFont = class{
                 y -= this.cH*scale;
                 break;
         }
+        text = text.toString();
+        scale = Math.round(scale);
+        let offSpaceScale = (this.off+this.spacing)*scale;
         let len = text.length;
         for(let i=0;i<len;i++){
             let c = text.charCodeAt(i)-32;
             if((c < 0)||(c > 94)) c = 0;
-            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*(this.off+this.spacing)*scale,y,this.cW*scale,this.cH*scale);
+            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*offSpaceScale,y,this.cW*scale,this.cH*scale);
         }
     }
 };

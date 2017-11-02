@@ -6,55 +6,61 @@ var canvas0  = document.getElementById('canvas0');
 var canvas1  = document.getElementById('canvas1');
 var canvasH0 = document.getElementById('HUD0');
 var canvasH1 = document.getElementById('HUD1');
+var canvasS0 = document.getElementById('screen0');
 var ctx0  = canvas0 .getContext('2d');
 var ctx1  = canvas1 .getContext('2d');
 var ctxH0 = canvasH0.getContext('2d');
 var ctxH1 = canvasH1.getContext('2d');
+var ctxS0 = canvasS0.getContext('2d');
 ctx0 .imageSmoothingEnabled = false;
 ctx1 .imageSmoothingEnabled = false;
 ctxH0.imageSmoothingEnabled = false;
 ctxH1.imageSmoothingEnabled = false;
+ctxS0.imageSmoothingEnabled = false;
 //Keyboard handling
 var prKeys={};
 window.onkeydown=function(e){
-    prKeys[e.key] = true;
-    prKeys[e.key+","+e.location] = true;
+    let k = e.key.toLowerCase();
+    prKeys[k] = true;
+    prKeys[k+","+e.location] = true;
     e.preventDefault();
     e.stopPropagation();
     return false;
 };
 window.onkeyup=function(e){
-    delete prKeys[e.key];
-    delete prKeys[e.key+","+e.location];
+    let k = e.key.toLowerCase();
+    delete prKeys[k];
+    delete prKeys[k+","+e.location];
 };
 window.onblur=function(){
     prKeys=[];
 };
 var keyConv = {
-    control:"Control",
-    ctrl:"Control",
-    alt:"Alt",
-    left:"ArrowLeft",
-    up:"ArrowUp",
-    right:"ArrowRight",
-    down:"ArrowDown",
-    enter:"Enter",
-    shift:"Shift",
-    escape:"Escape",
-    esc:"Escape",
-    backspace:"Backspace",
-    delete:"Delete",
-    del:"Delete",
+    control:"control",
+    ctrl:"control",
+    alt:"alt",
+    left:"arrowLeft",
+    up:"arrowUp",
+    right:"arrowRight",
+    down:"arrowDown",
+    enter:"enter",
+    shift:"shift",
+    escape:"escape",
+    esc:"escape",
+    backspace:"backspace",
+    delete:"delete",
+    del:"delete",
     space:" ",
     spacebar:" ",
 };
 function isKeyDown(k){
+    k = k.toLowerCase();
     let l = k.split(",");
     if(k.charAt(0) == ","){
         l[1] = l[2];
         l[0] = ",";
     }
-    let key = keyConv[l[0].toLowerCase()] || l[0].toLowerCase();
+    let key = keyConv[l[0]] || l[0];
     if(l[1]) key = key + "," + l[1];
     return prKeys[key]||false;
 }
@@ -84,7 +90,7 @@ function newPlayer(p={}){
         },
         touching:[]
     };
-    if(!p.user){
+    if(!(p.user || p.mouse)){
         newP.left = p.left||"left";
         newP.up = p.up||"up";
         newP.right = p.right||"right";
@@ -138,7 +144,7 @@ var channel = new DataChannel();
 var isOn = false;
 var user2id = {};
 var id2index = {};
-function updateId2index(){
+function updateId2Index(){
     id2index = {};
     let len = players.length;
     for(let i=0;i<len;i++){
@@ -156,7 +162,7 @@ channel.onopen = ()=>{
                 break;
             case "newPlayers": // msg = {type,ps}
                 let ps = msg.ps;
-                console.log("Got players from "+user+": "+ps);
+                console.log("Got players from "+user);
                 len = ps.length;
                 user2id[user] = [];
                 for(let i=0;i<len;i++){
@@ -166,7 +172,7 @@ channel.onopen = ()=>{
                     user2id[user].push(p.id);
                     players.push(newPlayer(p));
                 }
-                updateId2index();
+                updateId2Index();
                 initHUD();
                 break;
             case "input": // msg = {type,id,input,sync,x,y,dX,dY}
@@ -189,7 +195,7 @@ channel.onopen = ()=>{
             players.splice(id2index[ids[i]],1);
         }
         delete user2id[user];
-        updateId2index()
+        updateId2Index();
         initHUD();
     };
     setTimeout(()=>{
@@ -231,10 +237,12 @@ function controlPlayer(p,index){
         dX = inp.dX = isKeyDown(p.right)-isKeyDown(p.left);
         dY = inp.dY = isKeyDown(p.down) -isKeyDown(p.up);
         spec = inp.spec = isKeyDown(p.special);
-        if(tick%15 == 0){
-            channel.send({type:"input",id:p.id,input:inp,sync:true,x:p.x,y:p.y,dX:p.dX,dY:p.dY});
-        }else if((isOn) && (oldDX != dX || oldDY != dY || oldSpec != spec)){
-            channel.send({type:"input",id:p.id,input:inp});
+        if(isOn){
+            if(tick%30 == 0){ //Every second, force a sync
+                channel.send({type:"input",id:p.id,input:inp,sync:true,x:p.x,y:p.y,dX:p.dX,dY:p.dY});
+            }else if((oldDX != dX || oldDY != dY || oldSpec != spec)){
+                channel.send({type:"input",id:p.id,input:inp});
+            }
         }
     }
     switch(p.color){
@@ -246,9 +254,18 @@ function controlPlayer(p,index){
         case "orange":
             p.dX += dX*0.2;
             p.dY += dY*0.2;
-            if(!inRangeEx(p.x+p.dX,0,784)){
+            if((p.x+p.dX) > 784){
+                p.x = 784*2-p.x;
                 p.dX *= -0.95;
-            }if(!inRangeEx(p.y+p.dY,0,584)){
+            }if((p.x+p.dX) < 0){
+                p.x = -p.x;
+                p.dX *= -0.95;
+            }
+            if((p.y+p.dY) > 584){
+                p.y = 584*2-p.y;
+                p.dY *= -0.95;
+            }if((p.y+p.dY) < 0){
+                p.y = -p.y;
                 p.dY *= -0.95;
             }
             break;
@@ -341,6 +358,7 @@ function controlPlayer(p,index){
                 players[index].done = false; //Fixes player skipping
                 p.carryID--;
                 p.done = true; //Don't re-update the same soul
+                updateId2Index(); //Make sure to not fuck up the syncage
             }
             break;
         case "violet":
@@ -361,6 +379,7 @@ function controlPlayer(p,index){
     if(p.x == oldX) p.dX = 0;
     if(p.y == oldY) p.dY = 0;
 }
+
 //And now we ROLL.
 let round = Math.round;
 let ceil = Math.ceil;
@@ -368,42 +387,63 @@ let pi2 = Math.PI*2;
 var cunnie = new MonoFont();
 var wonder = new WidthFont();
 var tick=0;
-var syncTick = 0;
 var curBattleFrame = ()=>{};
 ctx0.fillStyle = "rgb(0,0,0)";
 ctx0.fillRect(0,0,800,600);
 ctxH1.textBaseline = ctxH0.textBaseline = "top"; //I like printing text using a top-right corner, thank you very much
 function initHUD(){
-    ctxH0.fillStyle = "rgb(0,0,0)";
+    ctxH0.fillStyle = "rgb(40,40,40)";
     ctxH0.fillRect(0,0,480,360);
+    ctxH1.clearRect(0,0,480,360);
     for(let i=0;i<players.length;i++){
         let p = players[i];
         ctxH0.fillStyle = p.css;
         ctxH0.fillRect(0,i*30,480,30);
-        cunnie.fillText(ctxH0,p.color,10,i*30+5,3);
-        wonder.fillText(ctxH0,"HP",132,i*30+10,1);
         ctxH0.fillStyle = "rgb(0,0,0)";
         ctxH0.fillRect(160,i*30+5,ceil(p.maxHP*1.2),21);
-        cunnie.fillText(ctxH0,"  /"+p.maxHP,220,i*30+5,3);
-        ctxH1.clearRect(0,0,480,360);
         ctxH1.fillStyle = "rgb(255,255,255)";
         ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
-        cunnie.fillText(ctxH1,p.hp,220,i*30+5,3);
+        cunnie.fillText(ctxH0,p.color,10,i*30+5,3);
+        wonder.fillText(ctxH0,"HP",132,i*30+10,1);
+        cunnie.fillText(ctxH1,`${p.hp}/${p.maxHP}`,220,i*30+5,3);
     }
 }
 initHUD();
 function firstBattleF(){
-    var bone = new Bone();
+    let bone = new Bone();
     curBattleFrame = (time)=>{
         for(let i=0;i<60;i++){
-            bone.setCSS(`hsl(${((i+tick)*4)%360},100%,50%)`);
-            bone.draw(ctx1,100+i*10,100,100+((i+tick)%100)*3);
+            let isWhite = true;
+            let r = {
+                x:100+i*10,y:100,
+                w:10,h:100+((i+tick)%100)*3
+            };
+            for(let i=0;i<players.length;i++){
+                let p=players[i];
+                let m = {
+                    x:p.x-p.dX,w:16+p.dX
+                };
+                if(p.dX<0){
+                    m.w = 16-p.dX;
+                    m.x = p.x;
+                }
+                if(inRange(r.x-m.x,-r.w,m.w)){
+                    bone.setCSS(`rgb(0,0,255)`);
+                    isWhite = false;
+                    break;
+                }
+            }
+            if(isWhite) bone.setCSS("rgb(255,255,255)");
+            bone.draw(ctx1,r.x,r.y,r.h);
         }
     };
 }
 curBattleFrame = firstBattleF;
 function doBattleFrame(time){ //Okay, *NOW* we roll
     tick++;
+    if(tick%30 == 0){
+        
+    }
     let oldHP = [];
     let plen = players.length;
     for(let index=0;index<plen;index++){
@@ -442,9 +482,7 @@ function doBattleFrame(time){ //Okay, *NOW* we roll
             ctxH1.clearRect(160,i*30+5,500,21);
             ctxH1.fillStyle = "rgb(255,255,255)";
             ctxH1.fillRect(160,i*30+5,ceil(p.hp*1.2),21);
-            let hp = p.hp;
-            if(hp < 10) hp = " "+hp;
-            cunnie.fillText(ctxH1,hp,220,i*30+5,3);
+            cunnie.fillText(ctxH1,`${p.hp}/${p.maxHP}`,220,i*30+5,3);
         }
     }
     window.requestAnimationFrame(doBattleFrame);

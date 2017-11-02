@@ -13,14 +13,20 @@
         <meta name="theme-color" content="#ffffff">
     </head>
     <body>
-        <script src="//cdn.webrtc-experiment.com/DataChannel.js"></script>
-        <canvas id="canvas0" width="800" height="600" style="position:absolute; top:0px; left:0px;   z-index:0;" oncontextmenu="return false;"></canvas>
-        <canvas id="canvas1" width="800" height="600" style="position:absolute; top:0px; left:0px;   z-index:1;" oncontextmenu="return false;"></canvas>
-        <canvas id="HUD0"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
+        <script type="text/javascript">
+            window.onerror = function(error, url, line) {
+            console.log(`Error @ line ${line}: ${error}`);
+            };
+        </script>
+        <script type="text/javascript" src="//cdn.webrtc-experiment.com/DataChannel.js"></script>
+        <canvas id="canvas0" width="800" height="600" style="position:absolute; top:0px;   left:0px;   z-index:0;" oncontextmenu="return false;"></canvas>
+        <canvas id="canvas1" width="800" height="600" style="position:absolute; top:0px;   left:0px;   z-index:1;" oncontextmenu="return false;"></canvas>
+        <canvas id="HUD0"    width="500" height="200" style="position:absolute; top:400px; left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
         <a href="." onClick="this.href += '?'+Date.now();this.onclick='';">
-        <canvas id="HUD1"    width="480" height="360" style="position:absolute; top:0px; left:800px; z-index:1;" oncontextmenu="return false;"></canvas>
+        <canvas id="HUD1"    width="500" height="200" style="position:absolute; top:400px; left:800px; z-index:1;" oncontextmenu="return false;"></canvas>
         </a>
-        <script type="text/javascript" src="sprites.js?101"></script>
-        <script type="text/javascript" src="UTR.js?101"></script>
+        <canvas id="screen0" width="500" height="400" style="position:absolute; top:0px;   left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
+        <script type="text/javascript" src="sprites.js?109"></script>
+        <script type="text/javascript" src="UTR.js?109"></script>
     </body>
 </html>

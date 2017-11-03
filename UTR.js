@@ -39,10 +39,10 @@ var keyConv = {
     control:"control",
     ctrl:"control",
     alt:"alt",
-    left:"arrowLeft",
-    up:"arrowUp",
-    right:"arrowRight",
-    down:"arrowDown",
+    left:"arrowleft",
+    up:"arrowup",
+    right:"arrowright",
+    down:"arrowdown",
     enter:"enter",
     shift:"shift",
     escape:"escape",
@@ -116,7 +116,7 @@ function newPlayer(p={}){
             break;
         case "indigo":
             newP.ground = false;
-            newP.carryID = -1;
+            newP.carryInd = -1;
             newP.carryX = 0;
             newP.maxHP = 30;
             break;
@@ -131,12 +131,20 @@ function newPlayer(p={}){
 }
 var players=[
     newPlayer({
-        color:window.prompt("What colour do you wanna be?"),
+        color:window.prompt("Player 1 Color"),
         left:"A",
         up:"W",
         right:"D",
         down:"S",
         special:"space"
+    }),
+    newPlayer({
+        color:window.prompt("Player 2 Color"),
+        left:"left",
+        up:"up",
+        right:"right",
+        down:"down",
+        special:"enter"
     }),
 ];
 //Handling online FUCKING MULTIPLYER BIATCHES
@@ -296,23 +304,23 @@ function controlPlayer(p,index){
             break;
         case "indigo":
             p.dX = dX*4;
-            let carryID = -1;
+            let carryInd = -1;
             let carryY = 1000;
             for(let i=0;i<players.length;i++){ //We find the highest possible carrier that isn't too high that you can't stand on it
                 if(i == index || !p.touching[i]) continue;
                 let pT = players[i];
-                if(pT.y < carryY && p.y < pT.y-7 && (p.carryID==-1 || pT.y < players[p.carryID].y)){
+                if(pT.y < carryY && p.y < pT.y-7 && (p.carryInd==-1 || pT.y < players[p.carryInd].y)){
                     carryY = pT.y;
-                    carryID = i;
+                    carryInd = i;
                 }
             }
-            let oldCarry = p.carryID;
-            p.carryID = carryID==-1 ? p.carryID : carryID;
-            if(p.carryID != oldCarry){
-                p.carryX = p.x-players[p.carryID].x;
+            let oldCarry = p.carryInd;
+            p.carryInd = carryInd==-1 ? p.carryInd : carryInd;
+            if(p.carryInd != oldCarry){
+                p.carryX = p.x-players[p.carryInd].x;
             }
-            if(spec || (dY == 1)) p.carryID = -1; //Cancel being carried by holding special or down, guaranteed
-            p.ground = p.y == 584 || p.carryID > -1;
+            if(spec || (dY == 1)) p.carryInd = -1; //Cancel being carried by holding special or down, guaranteed
+            p.ground = p.y == 584 || p.carryInd > -1;
             if(dY != -1 && p.dY < -2 ){
                 p.dY = -2;
             }
@@ -327,38 +335,36 @@ function controlPlayer(p,index){
 	            	p.dY += 0.3;
 	            }
             }else{
-                p.dY = 0;
-                if(p.carryID > -1){ //Assigns your location based on your carrier's location.
-                    let pT = players[p.carryID];
+                if(dY==-1){ //Jump
+                    p.dY = -6;
+                    p.carryInd = -1;
+                    p.ground = false;
+                }else if(p.carryInd > -1){ //Assigns your location based on your carrier's location.
                     p.dX = 0;
                     p.dY = 0;
                     p.carryX = clamp(p.carryX+dX*2,-10,10); //Lets you move a little bit while being carried
+                    let pT = players[p.carryInd];
                     p.y = pT.y-16;
                     p.x = pT.x+p.carryX;
                     
                     if(p.y<=0){
-                        let recID = p.carryID;
+                        let recID = p.carryInd;
                         for(let i = 16;true;i+=16){
                             players[recID].y = i;
                             players[recID].dY = 0;
-                            recID = players[recID].carryID;
-                            if(recID === undefined || recID === -1) break;
+                            recID = players[recID].carryInd;
+                            if(!(recID > -1)) break;
                         }
                     }
                 }
-                if(dY==-1){ //Jump
-                    p.dY = -6;
-                    p.carryID = -1;
-                    p.ground = false;
-                }
             }
-            if(p.carryID > index){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
+            if(p.carryInd > index){ //We need any carried players to be calculated after the carrier, so we put them at the end of the player list
                 players.push(p); //Put it at the end
                 players.splice(index,1); //Remove it from where it was
                 players[index].done = false; //Fixes player skipping
-                p.carryID--;
-                p.done = true; //Don't re-update the same soul
+                p.carryInd--;
                 updateId2Index(); //Make sure to not fuck up the syncage
+                initHUD();
             }
             break;
         case "violet":
@@ -413,7 +419,7 @@ function firstBattleF(){
     let bone = new Bone();
     curBattleFrame = (time)=>{
         for(let i=0;i<60;i++){
-            let isWhite = true;
+            let draw = true;
             let r = {
                 x:100+i*10,y:100,
                 w:10,h:100+((i+tick)%100)*3
@@ -428,13 +434,11 @@ function firstBattleF(){
                     m.x = p.x;
                 }
                 if(inRange(r.x-m.x,-r.w,m.w)){
-                    bone.setCSS(`rgb(0,0,255)`);
-                    isWhite = false;
+                    draw = false;
                     break;
                 }
             }
-            if(isWhite) bone.setCSS("rgb(255,255,255)");
-            bone.draw(ctx1,r.x,r.y,r.h);
+            if(draw) bone.draw(ctx1,r.x,r.y,r.h);
         }
     };
 }

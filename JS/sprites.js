@@ -2,8 +2,8 @@
 /*global Image*/
 { //Start of scope
 
-let fakeCanvas = document.createElement('canvas');
-let ctxF = fakeCanvas.getContext('2d');
+const fakeCanvas = document.createElement('canvas');
+const ctxF = fakeCanvas.getContext('2d');
 
 var newImage = function(w,h,src=""){
     let img = new Image(w,h);
@@ -17,10 +17,11 @@ var sprites = {
     ,cunnilingus:newImage(569,6,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjkAAAAGAgMAAABcNmevAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJUExURUdwTP8A/////ywUgrwAAAABdFJOUwBA5thmAAABRklEQVQoz8WSMY6FMAxE418hKitV5IpQIU6JtwIqaipMBTnljsPfnm5RhJIwGcYvDoEJo6nv/x94ovUxtxuNrG3UhvX5VKJdoq3gbaMYdj5MHebYrwOTU6wkOyT/QBYVm1ieaTkl4yucUWbzUs/WRO09j/ZyDyn3rAPb+M2TC1vLugodDJ+MnI3727TbnOBDk9AZEVgPuSEoYhAP8Jcb+T9RJ7YeeeSdnh3F7HkogA9r2Qh5yn4jYUAS9opwqkQtlU8HRChqzzBfnVuu/qj3LpgnJ/n4X+ynOoTfKMhbPYr1+wINCCKtTA8f7yVfWpV5FXD740PzDsK+edSorfNf4H8lhfjxh/54/N38nb7y8TzJ+TQpnxs9/TMAciLcF7AAbxGfg5j3T6Khor78j94Pl9/Fsn6XOgi6Iq/i//qghQD2pb72Twi/vpTgyY3YSe4AAAAASUVORK5CYII=")
     ,wonder:newImage(1042,12,"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABBIAAAAMCAMAAADoFW4MAAAACVBMVEVHcEz/AP////8sFIK8AAAAAXRSTlMAQObYZgAAAt1JREFUaN7tWttigyAMDfz/R29TkdwJoHZt8aFDBiE5hCMJANQnoV/QyzkH6hPrrUtMoXdSdlW7rJy0IR/VwNcs3uu1Ovf3SmZNmsJhoa2inX8fdZGitnub7ReO9qUMe3l/2AiovvYqb3mTuzclPR1KwFKKhPNPNsqlW8ZqMtVKezDKxAidEoJSRH2268HRGFtVlDD+iyYRPWBbnkf1V0cXZWi3pJKRHak62lbD3XihPYE2tfKw5kD6tMykhGzoyHtRSpAzTShhf21SgsTEVCeicrSMHAKT6KH0rPRubWad9Cnd7qKEsliEiy60hylBLlZERxollDWr6yX3IbSeE0+VeNJ9ixKUTz/ISYpOGFXZB44qwr0VxH6kMp0/LVgbX0u3fYfNUTeJldnUwBVOKm05CQDol0ww80J7Cm3AvpxKEKAxAgsu9B1AkxJQzZtTAkaKvCJK2AqLEu6kBLpZA1iUcBcliLBBpQScSyBBj6ANnxJqApIFH+L9BELudUQ6Q8Zj2c43cFC0vswImkuoLWqK5A8cMLd8DafLNBipbcyQhjtpY5TOrbslGSE44KQm1vJrgyafurJGCQvtCbTpcufLPkwJ4OYSHqEEBTI3fSTTHxI46KaEqiDdJbytk4Jdr5DwhJOCmx7+Ekr4D2hPUIK5pu4LHFQcWPTOA4FIQBGpbwcOdKKgaysY38rOJrx6trL+uAydya2slMAdpqYTW5Sw0B5FWw8cdErQ8wTfSglqepEazkFYTroo4bMooZ1ebB1C0hMk/xCSSUr6OZQeODhBwUyb9iEkh/mqY1A7nytPd8NxaiiihbAtnu2yrEnzJcgTaHr4SB1soT2KtnEIOZBLsNKLSjAeuqrUogQRFtkxpBX1QU96MXZVCcEMgYRR5PIMZ/CAk8Kok4IRE0Mk0tVsty6QqdJupYSFdhBt66pSLHC490Jz4Dbjay40u5TwsRearcldF5o/E23jQvMPg/YxlUQRwh0AAAAASUVORK5CYII=")
 };
-let shadowCache = {};
+const shadowCache = {};
 var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
+    let store;
     if(key !== undefined){
-        var store = shadowCache[key];
+        store = shadowCache[key];
         if(!store){
             shadowCache[key] = {};
             store = shadowCache[key];
@@ -28,7 +29,7 @@ var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
             return store[cssColor];
         }
     }
-    let w=img.width,h=img.height;
+    const w=img.width,h=img.height;
     fakeCanvas.width = w;
     fakeCanvas.height= h;
     ctxF.globalCompositeOperation = "source-over";
@@ -38,7 +39,7 @@ var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
     ctxF.fillStyle = cssColor;
     ctxF.globalCompositeOperation = "source-in";
     ctxF.fillRect(0,0,w,h);
-    let newImg = new Image(w,h);
+    const newImg = new Image(w,h);
     newImg.src = fakeCanvas.toDataURL();
     if(key !== undefined){
         store[cssColor] = Object.freeze(newImg.cloneNode(true));
@@ -47,8 +48,8 @@ var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
 };
 
 var drawImgBlend = function(ctx,img,x,y){
-    let oldAlpha = ctx.globalAlpha;
-    let oldComp = ctx.globalCompositeOperation;
+    const oldAlpha = ctx.globalAlpha;
+    const oldComp = ctx.globalCompositeOperation;
     
     ctx.globalAlpha = 1; //Draws the part that doesn't intersect
     ctx.globalCompositeOperation = "destination-over";
@@ -61,7 +62,7 @@ var drawImgBlend = function(ctx,img,x,y){
     ctx.globalAlpha = oldAlpha;
     ctx.globalCompositeOperation = oldComp;
 };
-let clamp = function(num,min,max){
+const clamp = function(num,min,max){
     if(num < min) return min;
     if(num > max) return max;
     return num;
@@ -78,8 +79,8 @@ var Bone = class{
         this.key = key;
     }
     draw(ctx,x,y,l,lateral=false){
-        l = clamp(l,this.h*2,l);
-        let oldFill = ctx.fillStyle;
+        if(l < this.h) throw new RangeError("Length of bone is too short")
+        const oldFill = ctx.fillStyle;
         ctx.fillStyle = this.fill;
         if(lateral){
             ctx.fillRect(x+this.h,y+this.rodOff,l-this.h*2,this.w-this.rodOff*2);
@@ -99,54 +100,54 @@ var Bone = class{
 };
 
 var MonoFont = class{
-    constructor(sheet=sprites.cunnilingus,cW=5,space=1,spacing=-1){
-        this.sheet = sheet;
+    constructor(sheet=sprites.cunnilingus,cW=5,space=1,spacing=-1,color){
+        this.sheet = color ? imgShadow(sheet,color) : sheet;
         this.cW = Math.round(cW);
         this.off = Math.round(cW+space);
         this.cH = this.sheet.height;
         this.spacing = spacing;
     }
-    fillText(ctx,text,x,y,scale=1){
+    fillText(ctx,text,x,y,h=this.cH,scaling){
+        if(scaling) h *= this.cH;
         switch(ctx.textBaseline){
             case "top":
             case "hanging":
                 break;
             case "middle":
-                y -= Math.floor(this.cH*scale/2);
+                y -= Math.floor(h/2);
                 break;
             case "alphabetical":
             case "ideographic":
             case "bottom":
             default:
-                y -= this.cH*scale;
+                y -= h;
                 break;
         }
         text = text.toString();
-        scale = Math.round(scale);
-        let offSpaceScale = (this.off+this.spacing)*scale;
-        let len = text.length;
+        const offSpaceScale = (this.off+this.spacing)*(h/this.cH);
+        const len = text.length;
+        let c;
         for(let i=0;i<len;i++){
-            let c = text.charCodeAt(i)-32;
-            if((c < 0)||(c > 94)) c = 0;
-            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*offSpaceScale,y,this.cW*scale,this.cH*scale);
+            c = text.charCodeAt(i)-32;
+            if(c<0 || c>94) c = 0;
+            ctx.drawImage(this.sheet,c*this.off,0,this.cW,this.cH,x+i*offSpaceScale,y,this.cW*h/this.cH,h);
         }
     }
 };
-let defW = [];
-for(let i=0;i<94;i++){
-    defW[i] = 10;
-}
+
+const defW = [];
+for(let i=0;i<94;i++) defW[i] = 10;
 defW[ 1] = defW[ 7] = defW[12] = defW[14] = defW[26] = defW[27] = defW[41] = defW[65] = defW[73] = defW[92] = 4;
 defW[17] = defW[28] = defW[30] = 5;
 defW[ 8] = defW[ 9] = defW[29] = defW[60] = defW[62] = defW[63] = defW[64] = defW[91] = defW[93] = 6;
 defW[11] = defW[13] = defW[15] = defW[61] = defW[94] = 8;
 defW[45] = defW[55] = defW[77] = defW[87] = 16;
 var WidthFont = class{
-    constructor(sheet=sprites.wonder,cWs=defW,space=2,spacing=2){
-        this.sheet = sheet;
+    constructor(sheet=sprites.wonder,cWs=defW,space=2,spacing=2,color){
+        this.sheet = color ? imgShadow(sheet,color) : sheet;
         this.offs = [0];
         let n = 0;
-        let len = cWs.length;
+        const len = cWs.length;
         for(let i = 1;i<len;i++){
             n += cWs[i-1]+space;
             this.offs[i] = n;
@@ -155,21 +156,21 @@ var WidthFont = class{
         this.cH = this.sheet.height;
         this.spacing = spacing;
     }
-    fillText(ctx,text,x,y,scale=1){
+    fillText(ctx,text,x,y,h=this.cH,scaling){
+        if(scaling) h *= this.cH;
         text = text.toString();
-        scale = Math.round(scale);
         switch(ctx.textBaseline){
             case "top":
             case "hanging":
                 break;
             case "middle":
-                y -= Math.floor(this.cH*scale/2);
+                y -= h/2;
                 break;
             case "alphabetical":
             case "ideographic":
             case "bottom":
             default:
-                y -= this.cH*scale;
+                y -= h;
                 break;
         }
         let len = text.length;
@@ -177,11 +178,11 @@ var WidthFont = class{
         for(let i=0;i<len;i++){
             let c = text.charCodeAt(i)-32;
             if((c < 0)||(c > 94)) c = 0;
-            ctx.drawImage(this.sheet,this.offs[c],0,this.cWs[c],this.cH,x+off,y,this.cWs[c]*scale,this.cH*scale);
-            off += (this.cWs[c]+this.spacing)*scale;
+            ctx.drawImage(this.sheet,this.offs[c],0,this.cWs[c],this.cH,x+off,y,this.cWs[c]*h/this.cH,h);
+            off += (this.cWs[c]+this.spacing)*h/this.cH;
         }
     }
-}
+};
 
 
-}//End of scope
+} //End of scope

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
     <head>
         <title>UTR</title>
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -13,20 +13,24 @@
         <meta name="theme-color" content="#ffffff">
     </head>
     <body>
+        <canvas id="canvas0" width="800" height="600" style="position:absolute; left:0px;   top:0px;  "></canvas>
+        <canvas id="canvas1" width="800" height="600" style="position:absolute; left:0px;   top:0px;  "></canvas>
+        <canvas id="screen0" width="500" height="300" style="position:absolute; left:800px; top:0px;  "></canvas>
+        <canvas id="HUD0"    width="500" height="300" style="position:absolute; left:800px; top:300px;"></canvas>
+        <canvas id="HUD1"    width="500" height="300" style="position:absolute; left:800px; top:300px;"></canvas>
         <script type="text/javascript">
-            window.onerror = function(error, url, line) {
-            console.log(`Error @ line ${line}: ${error}`);
+            window.onerror = function(error,url,line){
+                console.log(`Error in ${url} @ line ${line}: ${error}`);
             };
         </script>
-        <script type="text/javascript" src="//cdn.webrtc-experiment.com/DataChannel.js"></script>
-        <canvas id="canvas0" width="800" height="600" style="position:absolute; top:0px;   left:0px;   z-index:0;" oncontextmenu="return false;"></canvas>
-        <canvas id="canvas1" width="800" height="600" style="position:absolute; top:0px;   left:0px;   z-index:1;" oncontextmenu="return false;"></canvas>
-        <canvas id="HUD0"    width="500" height="200" style="position:absolute; top:400px; left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
-        <a href="." onClick="this.href += '?'+Date.now();this.onclick='';">
-        <canvas id="HUD1"    width="500" height="200" style="position:absolute; top:400px; left:800px; z-index:1;" oncontextmenu="return false;"></canvas>
-        </a>
-        <canvas id="screen0" width="500" height="400" style="position:absolute; top:0px;   left:800px; z-index:0;" oncontextmenu="return false;"></canvas>
-        <script type="text/javascript" src="sprites.js?109"></script>
-        <script type="text/javascript" src="UTR.js?109"></script>
+        <script type="text/javascript" src="https://webrtcexperiment-webrtc.netdna-ssl.com/DataChannel.js"></script>
+        <script type="text/javascript" src="JS/touch2mouse.js?128"></script>
+        <script type="text/javascript" src="JS/layers.js?128"     ></script>
+        <script type="text/javascript" src="JS/windows.js?128"    ></script>
+        <script type="text/javascript" src="JS/menus.js?128"      ></script>
+        <script type="text/javascript" src="JS/joystick.js?128"   ></script>
+        <script type="text/javascript" src="JS/sprites.js?128"    ></script>
+        <script type="text/javascript" src="JS/keyboard.js?128"   ></script>
+        <script type="text/javascript" src="JS/UTR.js?128"        ></script>
     </body>
 </html>

@@ -62,8 +62,8 @@ var JoystickCanvas = class{ //I apply functions within the constructor because I
             ctx.fill();
         };
         const doJoystick = (e)=>{
-            this.x = e.pageX - canX - d/2;
-            this.y = e.pageY - canY - d/2;
+            this.x = e.pageX-canX - d/2;
+            this.y = e.pageY-canY - d/2;
             const dist = Math.sqrt(this.x*this.x+this.y*this.y);
             if(dist < d/6){
                 this.section = -1;
@@ -89,7 +89,7 @@ var JoystickCanvas = class{ //I apply functions within the constructor because I
             if(this.section !== oldSec) drawStick(sectionPos[this.section][0],sectionPos[this.section][1]);
         };
         document.addEventListener("mousedown",(e)=>{
-            if(e.target !== canvas) return;
+            if(e.target!==canvas) return;
             if((e.pageX-canX - d/2)**2+(e.pageY-canY - d/2)**2 > d*d/4) return;
             this.pressed = true;
             doJoystick(e);

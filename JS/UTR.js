@@ -3,6 +3,7 @@
 /*global imgShadow,sprites,drawImgBlend,Bone,MonoFont,WidthFont */ //sprites.js
 /*global JoystickCanvas*/ //joystick.js
 /*global isKeyDown*/
+
 //Making players and their sprites
 var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
     red:"rgb(255,0,0)",
@@ -259,14 +260,14 @@ function controlPlayer(p,index){
             }
             if(!p.ground){ //This is gravity, designed to mirror Undertale very fucking closely. Yes, I stole the code. Sue me.
                 if(p.dY <= -4){ //Remember that up is negative and down is positive, and it makes a lot more sense.
-		            p.dY += 0.1;
-	            }else if(p.dY > -4 && p.dY <= -1){
-	            	p.dY += 0.25;
-	            }else if(p.dY > -1 && p.dY <= 0.5){
-	            	p.dY += 0.1;
-	            }else if(p.dY > 0.5 && p.dY < 8.5){
-	            	p.dY += 0.3;
-	            }
+                    p.dY += 0.1;
+                }else if(p.dY > -4 && p.dY <= -1){
+                    p.dY += 0.25;
+                }else if(p.dY > -1 && p.dY <= 0.5){
+                    p.dY += 0.1;
+                }else if(p.dY > 0.5 && p.dY < 8.5){
+                    p.dY += 0.3;
+                }
             }else{
                 if(dY==-1){ //Jump
                     p.dY = -6;
@@ -339,10 +340,6 @@ ctxH1.imageSmoothingEnabled = false;
 const canvasOpts = document.getElementById('HUD1');  //Options menu
 const ctxOpts = canvasOpts.getContext('2d');
 ctxOpts.imageSmoothingEnabled = false;
-
-//Options menu, for stuff like dis/enabling touch2mouse and adding/removing players
-
-         //Add stuff
 
 //And now we ROLL.
 const cunnie = new MonoFont();

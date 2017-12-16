@@ -18,9 +18,12 @@ var MenuCanvas = class{
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.style.cssText = "position:absolute; left:0px; top:0px;";
+        let canX=0,canY=0;
         canvas.setPosition = this.setPos = function(newX,newY){
-            canvas.style.left= newX+"px";
-            canvas.style.top = newY+"px";
+            canX = newX;
+            canY = newY;
+            canvas.style.left= canX+"px";
+            canvas.style.top = canY+"px";
         };
         let fontCSS = "20px Comic Sans";
         let fontIsFunc = false;
@@ -39,6 +42,9 @@ var MenuCanvas = class{
         let hOff = 0;
         let lvl = 0;
         let maxWidth = 0;
+        const isOpen = function(mother){
+            return (mother.open || !mother.canClose) && mother.children && mother.children.length>0;
+        };
         const drawMother = function(mother){
             const backColor = mother.backColor||"rgba(0,0,0,1)";
             const textColor = mother.textColor||"rgba(255,255,255,1)";
@@ -59,7 +65,7 @@ var MenuCanvas = class{
             }
             if(mother.width>maxWidth) maxWidth = mother.width;
             hOff += mother.height;
-            if((mother.open || !mother.canClose) && mother.children && mother.children.length>0){
+            if(isOpen(mother)){
                 lvl++;
                 const ch = mother.children;
                 for(let i=0;i<ch.length;i++){
@@ -77,9 +83,39 @@ var MenuCanvas = class{
             ctx.drawImage(fakeCanvas,0,0);
             maxWidth = 0;
             hOff = 0;
+            lvl = 0;
         };
-        
         this.draw();
+        
+        let btn;
+        const whichButton = function(mother,x,y){
+            hOff += mother.height;
+            if(isOpen(mother)){
+                lvl++;
+                btn = mother.children;
+                for(let i=0;i<btn.length;i++){
+                    if(hOff > y) return;
+                    whichButton(btn[i],y);
+                }
+                lvl--;
+            }
+        };
+        document.addEventListener("click",(e)=>{
+            if(e.target!==canvas) return;
+            const x = e.pageX-canX;
+            const y = e.pageY-canY;
+            whichButton(this.heirarchy,x,y);
+            if(lvl*10 <= x){
+                const hit = x > lvl*10+btn.width-btn.height;
+                if((btn.toggled===undefined || hit) && btn.function) btn.function(btn);
+                if(btn.toggled!==undefined && hit) btn.toggled = !btn.toggled;
+                else btn.open = !btn.open;
+            }
+            btn = undefined;
+            hOff = 0;
+            lvl = 0;
+        });
+        
         document.body.appendChild(canvas);
     }
 };

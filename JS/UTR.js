@@ -5,7 +5,7 @@
 /*global isKeyDown*/
 
 //Making players and their sprites
-var colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
+const colors = { //The pallets of the standard 7 colors; keep in mind the default heart is its own color: pink
     red:"rgb(255,0,0)",
     orange:"rgb(252,166,0)",
     yellow:"rgb(255,255,0)",
@@ -65,10 +65,10 @@ function newPlayer(p={}){
             break;
     }
     newP.hp = newP.maxHP;
-    newP.inv= newP.maxInv;
+    newP.inv = newP.maxInv;
     return newP;
 }
-var players=[
+const players = [
     newPlayer({
         color:window.prompt("Player 1 Color"),
         mouse:true
@@ -79,7 +79,7 @@ const user2id = {};
 const id2index = {};
 function updateId2Index(){
     id2index = {};
-    let len = players.length;
+    const len = players.length;
     for(let i=0;i<len;i++){
         id2index[players[i].id] = i;
     }
@@ -143,7 +143,8 @@ if(onlineMode == "host"){
 }else if(onlineMode == "peer"){
     channel.connect(room);
 }
-//Setting up the control-schemes and gameplay
+
+//Setting up the control-schemes and gameplay and etc.
 const clamp = function(num,min,max){
     if(num < min) return min;
     if(num > max) return max;

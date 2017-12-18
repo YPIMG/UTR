@@ -48,18 +48,23 @@ var imgShadow = function(img,cssColor="rgb(255,255,255)",key){
 };
 
 var drawImgBlend = function(ctx,img,x,y){
+    /*
     const oldAlpha = ctx.globalAlpha;
     const oldComp = ctx.globalCompositeOperation;
     
     ctx.globalAlpha = 1; //Draws the part that doesn't intersect
     ctx.globalCompositeOperation = "destination-over";
     ctx.drawImage(img,x,y);
-    
     ctx.globalAlpha = 1/2; //Draws the part that intersects, and blends it
     ctx.globalCompositeOperation = "source-atop";
     ctx.drawImage(img,x,y);
     
     ctx.globalAlpha = oldAlpha;
+    ctx.globalCompositeOperation = oldComp;
+    */
+    const oldComp = ctx.globalCompositeOperation;
+    ctx.globalCompositeOperation = "difference";
+    ctx.drawImage(img,x,y);
     ctx.globalCompositeOperation = oldComp;
 };
 const clamp = function(num,min,max){

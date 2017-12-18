@@ -1,14 +1,16 @@
 "use strict";
 { //Start scope
 
-const fakeCanvas = document.createElement('canvas');
-const ctxF = fakeCanvas.getContext('2d');
+const canvasF = document.createElement('canvas');
+const winWidth = canvasF.width = window.screen.width;
+const winHeight= canvasF.height= window.screen.height;
+const ctxF = canvasF.getContext('2d');
 ctxF.textBaseline = "top";
 
 var MenuCanvas = class{
     constructor(heirarchy){
         this.heirarchy = heirarchy || {
-            name: "menu",
+            name: "Menu",
             backColor: "rgba(255,0,0,1)",
             textColor: "rgba(0,0,0,1)",
             height:20, width:100,
@@ -39,65 +41,72 @@ var MenuCanvas = class{
             if(fontIsFunc) fontFunc(ctxF,text,x,y,fontSize,ctxF.fillStyle);
             else ctxF.fillText(text,x,y);
         };
-        let hOff = 0;
-        let lvl = 0;
-        let maxWidth = 0;
         const isOpen = function(mother){
-            return (mother.open || !mother.canClose) && mother.children && mother.children.length>0;
+            return mother.open && mother.children && mother.children.length>0;
         };
+        let hOffset = 0;
+        let level = 0;
+        let maxWidth = 0;
         const drawMother = function(mother){
             const backColor = mother.backColor||"rgba(0,0,0,1)";
             const textColor = mother.textColor||"rgba(255,255,255,1)";
             ctxF.fillStyle = backColor;
-            ctxF.fillRect(lvl*10,hOff,mother.width,fontSize);
+            ctxF.fillRect(level*10,hOffset,mother.width,mother.height||fontSize);
             ctxF.fillStyle = textColor;
-            fillText(` ${mother.name}`,lvl*10,hOff);
+            fillText(` ${mother.name}`,level*10,hOffset);
             if(mother.toggled !== undefined){
                 const h = mother.height;
                 ctxF.fillStyle = textColor;
-                ctxF.fillRect(lvl*10+mother.width-h*7/8,hOff+h/8,h*3/4,h*3/4);
+                ctxF.fillRect(level*10+mother.width-h*7/8,hOffset+h/8,h*3/4,h*3/4);
                 ctxF.fillStyle = backColor;
-                ctxF.fillRect(lvl*10+mother.width-h*3/4,hOff+h/4,h  /2,h  /2);
+                ctxF.fillRect(level*10+mother.width-h*3/4,hOffset+h/4,h  /2,h  /2);
                 if(mother.toggled){
                     ctxF.fillStyle = textColor;
-                    ctxF.fillRect(lvl*10+mother.width-h*5/8,hOff+h*3/8,h/4,h/4);
+                    ctxF.fillRect(level*10+mother.width-h*5/8,hOffset+h*3/8,h/4,h/4);
                 }
             }
             if(mother.width>maxWidth) maxWidth = mother.width;
-            hOff += mother.height;
+            hOffset += mother.height;
             if(isOpen(mother)){
-                lvl++;
+                level++;
                 const ch = mother.children;
                 for(let i=0;i<ch.length;i++){
                     drawMother(ch[i]);
                 }
-                lvl--;
+                level--;
             }
         };
         this.draw = function(){
             ctxF.font = fontCSS;
+            ctxF.clearRect(0,0,canvasF.width,canvasF.height);
+            canvasF.width = winWidth;
+            canvasF.height= winHeight;
             drawMother(this.heirarchy);
-            canvas.height = hOff;
-            canvas.width = maxWidth;
-            ctx.clearRect(0,0,hOff,maxWidth);
-            ctx.drawImage(fakeCanvas,0,0);
+            if(maxWidth>winWidth) maxWidth = winWidth;
+            if(hOffset>winHeight) hOffset = winHeight;
+            canvas.width = canvasF.width = maxWidth;
+            canvas.height= canvasF.height= hOffset;
+            ctx.clearRect(0,0,hOffset,maxWidth);
+            ctx.drawImage(canvasF,0,0);
             maxWidth = 0;
-            hOff = 0;
-            lvl = 0;
+            hOffset = 0;
+            level = 0;
         };
         this.draw();
         
         let btn;
         const whichButton = function(mother,x,y){
-            hOff += mother.height;
+            btn = mother;
+            hOffset += mother.height;
+            if(hOffset>y)  return;
             if(isOpen(mother)){
-                lvl++;
-                btn = mother.children;
-                for(let i=0;i<btn.length;i++){
-                    if(hOff > y) return;
-                    whichButton(btn[i],y);
+                level++;
+                const ch = mother.children;
+                for(let i=0;i<ch.length;i++){
+                    whichButton(ch[i],y);
+                    if(hOffset>y) return;
                 }
-                lvl--;
+                level--;
             }
         };
         document.addEventListener("click",(e)=>{
@@ -105,15 +114,26 @@ var MenuCanvas = class{
             const x = e.pageX-canX;
             const y = e.pageY-canY;
             whichButton(this.heirarchy,x,y);
-            if(lvl*10 <= x){
-                const hit = x > lvl*10+btn.width-btn.height;
-                if((btn.toggled===undefined || hit) && btn.function) btn.function(btn);
-                if(btn.toggled!==undefined && hit) btn.toggled = !btn.toggled;
+            const indent = level*10;
+            if(indent<=x && x<=(indent+btn.width)){
+                const hit = x > indent+btn.width-btn.height;
+                if((btn.toggled===undefined || !hit) && btn.onclick){
+                    btn.onclick(btn,this.heirarchy);
+                }
+                if(btn.toggled!==undefined && hit){
+                    if(btn.ontoggle) btn.ontoggle(btn,this.heirarchy);
+                    btn.toggled = !btn.toggled;
+                }
                 else btn.open = !btn.open;
             }
             btn = undefined;
-            hOff = 0;
-            lvl = 0;
+            hOffset = 0;
+            level = 0;
+            this.draw();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
         });
         
         document.body.appendChild(canvas);

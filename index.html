@@ -19,9 +19,9 @@
         <canvas id="HUD0"    width="500" height="300" style="position:absolute; left:800px; top:300px;"></canvas>
         <canvas id="HUD1"    width="500" height="300" style="position:absolute; left:800px; top:300px;"></canvas>
         <script type="text/javascript">
-            window.onerror = function(error,url,line){
+            window.addEventListener("error",function(error,url,line){
                 console.log(`Error in ${url} @ line ${line}: ${error}`);
-            };
+            });
         </script>
         <script type="text/javascript" src="https://webrtcexperiment-webrtc.netdna-ssl.com/DataChannel.js"></script>
         <script type="text/javascript" src="JS/touch2mouse.js?134"></script>

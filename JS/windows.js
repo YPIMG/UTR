@@ -4,7 +4,8 @@
 let dragging = false;
 let curElement;
 document.addEventListener("mousedown",(e)=>{
-    if(e.shiftKey && e.target.style.position == "absolute"){
+    if(e.button!==0) return;
+    if(e.shiftKey && e.target.style.position === "absolute"){
         dragging = true;
         curElement = e.target;
         e.stopImmediatePropagation();

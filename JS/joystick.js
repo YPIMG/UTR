@@ -90,6 +90,7 @@ var JoystickCanvas = class{ //I apply functions within the constructor because I
         };
         document.addEventListener("mousedown",(e)=>{
             if(e.target!==canvas) return;
+            if(e.button!==0) return;
             if((e.pageX-canX - d/2)**2+(e.pageY-canY - d/2)**2 > d*d/4) return;
             this.pressed = true;
             doJoystick(e);

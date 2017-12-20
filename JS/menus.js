@@ -78,14 +78,14 @@ var MenuCanvas = class{
         };
         this.draw = function(){
             ctxF.font = fontCSS;
-            ctxF.clearRect(0,0,canvasF.width,canvasF.height);
+            ctxF.clearRect(0,0,winWidth,winHeight);
             canvasF.width = winWidth;
             canvasF.height= winHeight;
             drawMother(this.heirarchy);
             if(maxWidth>winWidth) maxWidth = winWidth;
             if(hOffset>winHeight) hOffset = winHeight;
             canvas.width = canvasF.width = maxWidth;
-            canvas.height= canvasF.height= hOffset;
+            canvas.height= canvasF.height = hOffset;
             ctx.clearRect(0,0,hOffset,maxWidth);
             ctx.drawImage(canvasF,0,0);
             maxWidth = 0;

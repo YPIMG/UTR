@@ -12,7 +12,7 @@ var MenuCanvas = class{
         this.heirarchy = heirarchy || {
             name: "Menu",
             backColor: "rgba(255,0,0,1)",
-            textColor: "rgba(0,0,0,1)",
+            forecolor: "rgba(0,0,0,1)",
             height:20, width:100,
             children: [],
             open: false
@@ -49,19 +49,19 @@ var MenuCanvas = class{
         let maxWidth = 0;
         const drawMother = function(mother){
             const backColor = mother.backColor||"rgba(0,0,0,1)";
-            const textColor = mother.textColor||"rgba(255,255,255,1)";
+            const foreColor = mother.forecolor||"rgba(255,255,255,1)";
             ctxF.fillStyle = backColor;
             ctxF.fillRect(level*10,hOffset,mother.width,mother.height||fontSize);
-            ctxF.fillStyle = textColor;
-            fillText(` ${mother.name}`,level*10,hOffset);
+            ctxF.fillStyle = foreColor;
+            fillText(mother.name,level*10+8,hOffset);
             if(mother.toggled !== undefined){
                 const h = mother.height;
-                ctxF.fillStyle = textColor;
+                ctxF.fillStyle = foreColor;
                 ctxF.fillRect(level*10+mother.width-h*7/8,hOffset+h/8,h*3/4,h*3/4);
                 ctxF.fillStyle = backColor;
                 ctxF.fillRect(level*10+mother.width-h*3/4,hOffset+h/4,h  /2,h  /2);
                 if(mother.toggled){
-                    ctxF.fillStyle = textColor;
+                    ctxF.fillStyle = foreColor;
                     ctxF.fillRect(level*10+mother.width-h*5/8,hOffset+h*3/8,h/4,h/4);
                 }
             }
